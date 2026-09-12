@@ -541,15 +541,41 @@
     updateRing(active.remainingSeconds / active.durationSeconds);
   }
 
+  // Tracks whether we've pushed a "fake" history entry for Focus Mode,
+  // so the system Back button can be caught instead of closing the app.
+  let focusHistoryActive = false;
+
   function showFocusView() {
     listView.style.display = 'none';
     focusView.style.display = 'block';
+    if (!focusHistoryActive) {
+      history.pushState({ focusScreen: true }, '');
+      focusHistoryActive = true;
+    }
   }
 
   function showListView() {
     focusView.style.display = 'none';
     listView.style.display = 'block';
+    // Consume the fake history entry now that we've left Focus Mode,
+    // so Back presses on the list screen behave normally again.
+    if (focusHistoryActive) {
+      focusHistoryActive = false;
+      history.back();
+    }
   }
+
+  // Intercepts the system/browser Back button. If we're in Focus Mode,
+  // treat it exactly like pressing the Break button instead of closing
+  // the app and silently killing the timer.
+  window.addEventListener('popstate', () => {
+    if (focusHistoryActive && focusView.style.display !== 'none') {
+      history.pushState({ focusScreen: true }, ''); // cancel the exit, stay put
+      breakOverlay.classList.add('open');
+    } else {
+      focusHistoryActive = false;
+    }
+  });
 
   // Rebuilds the whole task list from scratch. Only call this when the
   // list itself actually changes (add/delete/edit/status/reorder) -
