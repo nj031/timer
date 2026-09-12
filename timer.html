@@ -160,7 +160,7 @@
     cursor: pointer;
   }
 
-  #focusPauseBtn, #focusBreakBtn { background-color: #3A4C55; color: #F2EFE9; }
+  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #3A4C55; color: #F2EFE9; }
 
   .controls button:disabled {
     opacity: 0.4;
@@ -397,6 +397,7 @@
 
     <div class="controls">
       <button id="focusPauseBtn">Pause</button>
+      <button id="focusResetBtn">Reset</button>
       <button id="focusBreakBtn">Break</button>
     </div>
   </div>
@@ -452,6 +453,7 @@
   const focusName = document.getElementById('focusName');
   const focusDisplay = document.getElementById('focusDisplay');
   const focusPauseBtn = document.getElementById('focusPauseBtn');
+  const focusResetBtn = document.getElementById('focusResetBtn');
   const focusBreakBtn = document.getElementById('focusBreakBtn');
   const focusTotal = document.getElementById('focusTotal');
   const ringProgress = document.getElementById('ringProgress');
@@ -507,6 +509,20 @@
 
   function getActiveTask() {
     return tasks.find(t => t.id === activeTaskId) || null;
+  }
+
+  // Shows "remaining/total" (in minutes) for a task that's in progress and
+  // has already used some time (e.g. after a Break). Otherwise just shows
+  // the plain total duration, same as before.
+  function formatTaskDurationLabel(task) {
+    const totalMin = Math.round(task.durationSeconds / 60);
+    if (task.status === 'in-progress' && task.remainingSeconds < task.durationSeconds) {
+      // Round UP so it never understates the time still needed
+      // (e.g. 23 min 40 sec left still shows as 24, not 23)
+      const remainingMin = Math.ceil(task.remainingSeconds / 60);
+      return remainingMin + '/' + totalMin;
+    }
+    return totalMin + ' min';
   }
 
   // Ring geometry: circle radius 90 (matches the SVG markup)
@@ -598,7 +614,7 @@
         <div class="task-content">
           <div class="task-top">
             <span class="task-name"></span>
-            <span class="task-duration">${Math.round(task.durationSeconds / 60)} min</span>
+            <span class="task-duration">${formatTaskDurationLabel(task)}</span>
           </div>
           <div class="task-bottom">
             <span class="status ${task.status}"></span>
@@ -985,6 +1001,17 @@
       focusPauseBtn.textContent = 'Pause';
       if (active) updateActiveNotification(active, false);
     }
+  });
+
+  // Reset stops the countdown and restores the task's full original duration
+  focusResetBtn.addEventListener('click', () => {
+    const active = getActiveTask();
+    if (!active) return;
+    stopInterval();
+    active.remainingSeconds = active.durationSeconds;
+    focusPauseBtn.textContent = 'Pause'; // ready to be started fresh
+    updateActiveNotification(active, true);
+    render();
   });
 
   // Break now opens a confirmation modal instead of acting immediately
