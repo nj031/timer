@@ -1009,7 +1009,7 @@
     if (!active) return;
     stopInterval();
     active.remainingSeconds = active.durationSeconds;
-    focusPauseBtn.textContent = 'Pause'; // ready to be started fresh
+    focusPauseBtn.textContent = 'Resume'; // timer is stopped after reset, so it needs a fresh press to start
     updateActiveNotification(active, true);
     render();
   });
