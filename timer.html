@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Task at a Time</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B2A32">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background-color: #1B2A32;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #F2EFE9;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 60px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #9FD8CB;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* --- Active task / main timer card --- */
+  .now-playing {
+    background-color: #22343C;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  #activeName, #focusName {
+    font-size: 1rem;
+    color: #C7D6D2;
+    margin-bottom: 8px;
+    min-height: 1.2em;
+  }
+
+  .focus-status {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background-color: #C78A3A;
+    color: #1B2A32;
+    margin-bottom: 10px;
+  }
+
+  #focusName {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #F2EFE9;
+  }
+
+  /* --- Circular ring timer (Focus Screen only) --- */
+  .ring-wrap {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 4px auto 18px;
+  }
+
+  .ring-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .ring-track {
+    fill: none;
+    stroke: #3A4C55;
+    stroke-width: 10;
+  }
+
+  .ring-progress {
+    fill: none;
+    stroke: #9FD8CB;
+    stroke-width: 10;
+    stroke-linecap: round;
+  }
+
+  .ring-dot {
+    fill: #9FD8CB;
+  }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #focusDisplay {
+    font-family: 'Courier New', monospace;
+    font-size: 1.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .ring-total {
+    font-size: 0.8rem;
+    color: #C7D6D2;
+    margin-top: 4px;
+  }
+
+  /* --- Break confirmation modal subtext --- */
+  .menu-subtext {
+    font-size: 0.85rem;
+    color: #C7D6D2;
+    text-align: center;
+    margin-top: -4px;
+    margin-bottom: 6px;
+  }
+
+  /* --- Inputs inside Edit modal --- */
+  .modal-input {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #1B2A32;
+    width: 100%;
+  }
+
+  #display {
+    font-family: 'Courier New', monospace;
+    font-size: 3.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 18px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .controls button {
+    flex: 1;
+    padding: 12px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  #focusPauseBtn, #focusBreakBtn { background-color: #3A4C55; color: #F2EFE9; }
+
+  .controls button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* --- Add task form --- */
+  .add-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .add-form input[type="text"] {
+    flex: 2;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #1B2A32;
+  }
+
+  .add-form input[type="number"] {
+    flex: 1;
+    width: 60px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #1B2A32;
+  }
+
+  .add-form button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* --- Task list --- */
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task {
+    background-color: #22343C;
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .task-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .drag-handle {
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #6B7F87;
+    padding: 10px 8px;
+    margin: -10px -8px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .task.dragging {
+    opacity: 0.5;
+  }
+
+  .task.active {
+    border-color: #9FD8CB;
+  }
+
+  .task.completed {
+    opacity: 0.55;
+  }
+
+  .task-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .task-name {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .task-duration {
+    font-size: 0.85rem;
+    color: #C7D6D2;
+  }
+
+  .task-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background-color: #3A4C55;
+  }
+
+  .status.in-progress { background-color: #C78A3A; color: #1B2A32; }
+  .status.completed { background-color: #6FBF8B; color: #1B2A32; }
+
+  .task-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .task-actions button {
+    border: none;
+    background: none;
+    color: #C7D6D2;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+
+  .empty-msg {
+    text-align: center;
+    color: #C7D6D2;
+    font-size: 0.9rem;
+    padding: 20px 0;
+  }
+
+  /* --- Task action popup --- */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .overlay.open {
+    display: flex;
+  }
+
+  .menu {
+    background-color: #22343C;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .menu-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    color: #9FD8CB;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+
+  .menu-btn {
+    padding: 14px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    cursor: pointer;
+  }
+
+  .menu-btn.danger {
+    background-color: #C75A4A;
+    color: #F2EFE9;
+  }
+
+  .menu-btn.cancel {
+    background-color: transparent;
+    color: #C7D6D2;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>Focus Timer</h1>
+
+  <!-- LIST VIEW: shown by default, hidden while a task is in focus -->
+  <div id="listView">
+    <div class="add-form">
+      <input type="text" id="taskNameInput" placeholder="Task name">
+      <input type="number" id="taskMinutesInput" placeholder="Min" min="1" value="25">
+      <button id="addTaskBtn">Add</button>
+    </div>
+
+    <ul class="task-list" id="taskList"></ul>
+  </div>
+
+  <!-- FOCUS VIEW: shown only while a task is actively selected -->
+  <div id="focusView" class="now-playing" style="display: none;">
+    <div class="focus-status">In Progress</div>
+    <div id="focusName">Task name</div>
+
+    <div class="ring-wrap">
+      <svg viewBox="0 0 200 200" class="ring-svg">
+        <circle class="ring-track" cx="100" cy="100" r="90" transform="rotate(-90 100 100)"></circle>
+        <circle id="ringProgress" class="ring-progress" cx="100" cy="100" r="90" transform="rotate(-90 100 100)"></circle>
+        <circle id="ringDot" class="ring-dot" cx="100" cy="10" r="7"></circle>
+      </svg>
+      <div class="ring-center">
+        <div id="focusDisplay">00:00:00</div>
+        <div id="focusTotal" class="ring-total">Total 0 seconds</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="focusPauseBtn">Pause</button>
+      <button id="focusBreakBtn">Break</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup menu shown when a task is tapped -->
+<div class="overlay" id="overlay">
+  <div class="menu">
+    <div class="menu-title" id="menuTaskName">Task name</div>
+    <button class="menu-btn" id="menuStartBtn">▶ Start</button>
+    <button class="menu-btn" id="menuEditBtn">✏ Edit</button>
+    <button class="menu-btn" id="menuDoneBtn">✓ Done</button>
+    <button class="menu-btn danger" id="menuDeleteBtn">🗑 Delete</button>
+    <button class="menu-btn cancel" id="menuCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Custom confirmation popup shown when Break is pressed -->
+<div class="overlay" id="breakOverlay">
+  <div class="menu">
+    <div class="menu-title">Are you sure you want to take a break?</div>
+    <div class="menu-subtext">Your timer will be paused and you'll return to your task list.</div>
+    <button class="menu-btn" id="breakConfirmBtn">Take a Break</button>
+    <button class="menu-btn cancel" id="breakCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Custom Edit Task popup (replaces the native browser prompt) -->
+<div class="overlay" id="editOverlay">
+  <div class="menu">
+    <div class="menu-title">Edit Task</div>
+    <input type="text" id="editNameInput" class="modal-input" placeholder="Task name">
+    <input type="number" id="editMinutesInput" class="modal-input" placeholder="Minutes" min="1">
+    <button class="menu-btn" id="editSaveBtn">Save</button>
+    <button class="menu-btn cancel" id="editCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Custom Delete confirmation popup (replaces the native browser confirm) -->
+<div class="overlay" id="deleteOverlay">
+  <div class="menu">
+    <div class="menu-title">Delete this task?</div>
+    <div class="menu-subtext" id="deleteTaskNameText"></div>
+    <button class="menu-btn danger" id="deleteConfirmBtn">🗑 Delete</button>
+    <button class="menu-btn cancel" id="deleteCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<script>
+  // ---- Element references ----
+  const listView = document.getElementById('listView');
+  const focusView = document.getElementById('focusView');
+  const focusName = document.getElementById('focusName');
+  const focusDisplay = document.getElementById('focusDisplay');
+  const focusPauseBtn = document.getElementById('focusPauseBtn');
+  const focusBreakBtn = document.getElementById('focusBreakBtn');
+  const focusTotal = document.getElementById('focusTotal');
+  const ringProgress = document.getElementById('ringProgress');
+  const ringDot = document.getElementById('ringDot');
+  const breakOverlay = document.getElementById('breakOverlay');
+  const breakConfirmBtn = document.getElementById('breakConfirmBtn');
+  const breakCancelBtn = document.getElementById('breakCancelBtn');
+  const taskNameInput = document.getElementById('taskNameInput');
+  const taskMinutesInput = document.getElementById('taskMinutesInput');
+  const addTaskBtn = document.getElementById('addTaskBtn');
+  const taskListEl = document.getElementById('taskList');
+
+  // ---- App state ----
+  let tasks = [];          // list of all tasks
+  let activeTaskId = null; // which task is currently shown in the main timer
+  let timerId = null;      // the running countdown (like before)
+  let nextId = 1;          // simple counter to give each task a unique id
+
+  // Saves the current task list to the phone so it survives closing the app
+  function saveTasks() {
+    localStorage.setItem('oneTaskAtATime_tasks', JSON.stringify(tasks));
+    localStorage.setItem('oneTaskAtATime_nextId', String(nextId));
+  }
+
+  // Loads any previously saved tasks when the app opens
+  function loadTasks() {
+    const saved = localStorage.getItem('oneTaskAtATime_tasks');
+    const savedNextId = localStorage.getItem('oneTaskAtATime_nextId');
+    if (saved) {
+      try {
+        tasks = JSON.parse(saved);
+      } catch (e) {
+        tasks = [];
+      }
+    }
+    if (savedNextId) nextId = Number(savedNextId);
+  }
+
+  // ---- Helpers ----
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  }
+
+  // Focus Screen uses HH:MM:SS to match the circular timer reference design
+  function formatTimeHMS(seconds) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return [hrs, mins, secs].map(n => String(n).padStart(2, '0')).join(':');
+  }
+
+  function getActiveTask() {
+    return tasks.find(t => t.id === activeTaskId) || null;
+  }
+
+  // Ring geometry: circle radius 90 (matches the SVG markup)
+  const RING_RADIUS = 90;
+  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+  ringProgress.setAttribute('stroke-dasharray', RING_CIRCUMFERENCE);
+
+  // Updates the ring's filled arc and moving dot to match the given fraction
+  // of time remaining (1 = full time left, 0 = finished).
+  function updateRing(fraction) {
+    const clamped = Math.max(0, Math.min(1, fraction));
+    ringProgress.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE * (1 - clamped));
+
+    // The dot sits at the tip of the remaining arc, sweeping clockwise
+    // from the top (12 o'clock) as time runs out.
+    const angle = 2 * Math.PI * (1 - clamped); // radians traveled clockwise from top
+    const cx = 100 + RING_RADIUS * Math.sin(angle);
+    const cy = 100 - RING_RADIUS * Math.cos(angle);
+    ringDot.setAttribute('cx', cx);
+    ringDot.setAttribute('cy', cy);
+  }
+
+  // ---- Rendering ----
+  // Updates just the focus screen's text/timer. Cheap - safe to call
+  // every second without disturbing the task list or an in-progress drag.
+  function updateFocusScreen() {
+    const active = getActiveTask();
+    if (!active) return;
+    focusName.textContent = active.name;
+    focusDisplay.textContent = formatTimeHMS(active.remainingSeconds);
+    focusTotal.textContent = 'Total ' + formatTimeHMS(active.durationSeconds);
+    updateRing(active.remainingSeconds / active.durationSeconds);
+  }
+
+  function showFocusView() {
+    listView.style.display = 'none';
+    focusView.style.display = 'block';
+  }
+
+  function showListView() {
+    focusView.style.display = 'none';
+    listView.style.display = 'block';
+  }
+
+  // Rebuilds the whole task list from scratch. Only call this when the
+  // list itself actually changes (add/delete/edit/status/reorder) -
+  // NOT on every timer tick, since that would wipe out an in-progress drag.
+  function renderTaskList() {
+    taskListEl.innerHTML = '';
+    if (tasks.length === 0) {
+      taskListEl.innerHTML = '<li class="empty-msg">No tasks yet. Add one above.</li>';
+      return;
+    }
+
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'task' +
+        (task.id === activeTaskId ? ' active' : '') +
+        (task.status === 'completed' ? ' completed' : '');
+
+      li.innerHTML = `
+        <span class="drag-handle">⋮⋮</span>
+        <div class="task-content">
+          <div class="task-top">
+            <span class="task-name"></span>
+            <span class="task-duration">${Math.round(task.durationSeconds / 60)} min</span>
+          </div>
+          <div class="task-bottom">
+            <span class="status ${task.status}"></span>
+          </div>
+        </div>
+      `;
+      li.dataset.id = task.id;
+
+      // Set text via textContent (safer than injecting into innerHTML directly)
+      li.querySelector('.task-name').textContent = task.name;
+      li.querySelector('.status').textContent = statusLabel(task.status);
+
+      // Tapping the row opens the action menu - but not if the tap
+      // was on the drag handle (that's reserved for reordering)
+      li.addEventListener('click', (e) => {
+        if (e.target.closest('.drag-handle')) return;
+        openTaskMenu(task.id);
+      });
+
+      makeDraggable(li);
+
+      taskListEl.appendChild(li);
+    });
+  }
+
+  // Full refresh: focus screen (if open) + task list. Use this after
+  // structural changes (add/delete/edit/status/select/reorder).
+  function render() {
+    updateFocusScreen();
+    renderTaskList();
+    saveTasks();
+  }
+
+  function statusLabel(status) {
+    if (status === 'in-progress') return 'In Progress';
+    if (status === 'completed') return 'Completed';
+    return 'Not Started';
+  }
+
+  // ---- Drag-and-drop reordering ----
+  // Works with mouse, touch, and pen, since Pointer Events cover all of them.
+  function makeDraggable(li) {
+    const handle = li.querySelector('.drag-handle');
+
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      li.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+
+      function onMove(moveEvent) {
+        // Stop the page/browser from trying to scroll while dragging
+        moveEvent.preventDefault();
+
+        // Look at every other task row and find the first one whose
+        // vertical middle is below the pointer - we'll drop just above it.
+        const siblings = [...taskListEl.querySelectorAll('.task')].filter(el => el !== li);
+        const y = moveEvent.clientY;
+
+        let nextSibling = null;
+        for (const sib of siblings) {
+          const rect = sib.getBoundingClientRect();
+          const middle = rect.top + rect.height / 2;
+          if (y < middle) {
+            nextSibling = sib;
+            break;
+          }
+        }
+
+        if (nextSibling) {
+          taskListEl.insertBefore(li, nextSibling);
+        } else {
+          taskListEl.appendChild(li);
+        }
+      }
+
+      function finishDrag() {
+        li.classList.remove('dragging');
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', finishDrag);
+        handle.removeEventListener('pointercancel', finishDrag);
+
+        // Read the new visual order from the DOM and save it as the
+        // real task order, so it's kept next time we render.
+        const newOrderIds = [...taskListEl.querySelectorAll('.task')].map(el => Number(el.dataset.id));
+        tasks.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+      }
+
+      // pointermove/up are attached to the handle itself (not document),
+      // which works reliably because setPointerCapture routes all of this
+      // pointer's events to it even as the row moves around the screen.
+      handle.addEventListener('pointermove', onMove, { passive: false });
+      handle.addEventListener('pointerup', finishDrag);
+      handle.addEventListener('pointercancel', finishDrag);
+    }, { passive: false });
+  }
+
+  // ---- Task actions ----
+  function addTask() {
+    const name = taskNameInput.value.trim();
+    const minutes = parseFloat(taskMinutesInput.value);
+    if (!name || !minutes || minutes <= 0) return; // ignore invalid input
+
+    const seconds = Math.round(minutes * 60);
+    tasks.push({
+      id: nextId++,
+      name: name,
+      durationSeconds: seconds,
+      remainingSeconds: seconds,
+      status: 'not-started'
+    });
+
+    taskNameInput.value = '';
+    taskMinutesInput.value = 25;
+    render();
+  }
+
+  // Starts the given task's timer, makes it the active task, and
+  // switches to the Focus Screen. Only called from the popup menu's
+  // "Start"/"Continue" button.
+  function startTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task || task.status === 'completed') return;
+
+    stopInterval(); // stop whatever was running before
+    activeTaskId = id;
+    if (task.status === 'not-started') {
+      task.status = 'in-progress';
+    }
+    render();
+    showFocusView();
+    runInterval();
+    ensureNotificationPermission();
+    updateActiveNotification(task, false);
+  }
+
+  // ---- Popup menu logic ----
+  let menuTaskId = null; // which task the open menu belongs to
+
+  const overlay = document.getElementById('overlay');
+  const menuTaskName = document.getElementById('menuTaskName');
+  const menuStartBtn = document.getElementById('menuStartBtn');
+  const menuEditBtn = document.getElementById('menuEditBtn');
+  const menuDoneBtn = document.getElementById('menuDoneBtn');
+  const menuDeleteBtn = document.getElementById('menuDeleteBtn');
+  const menuCancelBtn = document.getElementById('menuCancelBtn');
+
+  function openTaskMenu(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    menuTaskId = id;
+    menuTaskName.textContent = task.name;
+    // If this task has already been started before (even if paused
+    // or on a break), show "Continue" instead of "Start"
+    menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
+    overlay.classList.add('open');
+  }
+
+  function closeTaskMenu() {
+    menuTaskId = null;
+    overlay.classList.remove('open');
+  }
+
+  menuStartBtn.addEventListener('click', () => {
+    startTask(menuTaskId);
+    closeTaskMenu();
+  });
+
+  menuEditBtn.addEventListener('click', () => {
+    editTask(menuTaskId);
+    closeTaskMenu();
+  });
+
+  menuDoneBtn.addEventListener('click', () => {
+    markComplete(menuTaskId);
+    closeTaskMenu();
+  });
+
+  menuDeleteBtn.addEventListener('click', () => {
+    openDeleteModal(menuTaskId);
+    closeTaskMenu();
+  });
+
+  menuCancelBtn.addEventListener('click', closeTaskMenu);
+
+  // Clicking the dark background (outside the menu) also closes it
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeTaskMenu();
+  });
+
+  // ---- Custom Edit modal (replaces the native prompt() dialogs) ----
+  let editTaskId = null;
+  const editOverlay = document.getElementById('editOverlay');
+  const editNameInput = document.getElementById('editNameInput');
+  const editMinutesInput = document.getElementById('editMinutesInput');
+  const editSaveBtn = document.getElementById('editSaveBtn');
+  const editCancelBtn = document.getElementById('editCancelBtn');
+
+  function editTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    editTaskId = id;
+    editNameInput.value = task.name;
+    editMinutesInput.value = Math.round(task.durationSeconds / 60);
+    editOverlay.classList.add('open');
+  }
+
+  function closeEditModal() {
+    editTaskId = null;
+    editOverlay.classList.remove('open');
+  }
+
+  editSaveBtn.addEventListener('click', () => {
+    const task = tasks.find(t => t.id === editTaskId);
+    if (!task) { closeEditModal(); return; }
+
+    const newName = editNameInput.value.trim();
+    const minutesNum = parseFloat(editMinutesInput.value);
+
+    if (newName) task.name = newName;
+    if (minutesNum > 0) {
+      task.durationSeconds = Math.round(minutesNum * 60);
+      // Only reset remaining time if this task isn't currently running
+      if (task.id !== activeTaskId || task.status !== 'in-progress') {
+        task.remainingSeconds = task.durationSeconds;
+      }
+    }
+    render();
+    closeEditModal();
+  });
+
+  editCancelBtn.addEventListener('click', closeEditModal);
+  editOverlay.addEventListener('click', (e) => {
+    if (e.target === editOverlay) closeEditModal();
+  });
+
+  // ---- Custom Delete modal (replaces the native confirm() dialog) ----
+  let deleteTaskId = null;
+  const deleteOverlay = document.getElementById('deleteOverlay');
+  const deleteTaskNameText = document.getElementById('deleteTaskNameText');
+  const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+  const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+
+  function openDeleteModal(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    deleteTaskId = id;
+    deleteTaskNameText.textContent = '"' + task.name + '"';
+    deleteOverlay.classList.add('open');
+  }
+
+  function closeDeleteModal() {
+    deleteTaskId = null;
+    deleteOverlay.classList.remove('open');
+  }
+
+  deleteConfirmBtn.addEventListener('click', () => {
+    deleteTask(deleteTaskId);
+    closeDeleteModal();
+  });
+
+  deleteCancelBtn.addEventListener('click', closeDeleteModal);
+  deleteOverlay.addEventListener('click', (e) => {
+    if (e.target === deleteOverlay) closeDeleteModal();
+  });
+
+  function markComplete(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    if (task.id === activeTaskId) stopInterval();
+    task.status = 'completed';
+    render();
+  }
+
+  function deleteTask(id) {
+    if (id === activeTaskId) {
+      stopInterval();
+      activeTaskId = null;
+    }
+    tasks = tasks.filter(t => t.id !== id);
+    render();
+  }
+
+  // ---- Android notifications (via the service worker) ----
+  // Ask for permission the first time a task is started
+  function ensureNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  // Shows/updates the ongoing "timer is running" notification.
+  // Re-uses the same tag so it replaces itself instead of stacking up.
+  function updateActiveNotification(task, paused) {
+    if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.showNotification(task.name, {
+        body: (paused ? 'Paused - ' : '') + formatTimeHMS(task.remainingSeconds) + ' remaining',
+        tag: 'active-timer',
+        renotify: false,
+        silent: true,
+        requireInteraction: true,
+        icon: 'icon-192.png',
+        actions: paused ? [] : [{ action: 'pause', title: 'Pause' }]
+      });
+    });
+  }
+
+  function clearActiveNotification() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.getNotifications({ tag: 'active-timer' }).then((notifs) => notifs.forEach((n) => n.close()));
+    });
+  }
+
+  function showCompletionNotification(task) {
+    if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.showNotification("Time's up! " + task.name, {
+        tag: 'timer-done',
+        icon: 'icon-192.png'
+      });
+    });
+  }
+
+  // Listen for the Pause action pressed from inside the notification itself
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'pause-timer') {
+        const active = getActiveTask();
+        if (active && timerId !== null) {
+          stopInterval();
+          focusPauseBtn.textContent = 'Resume';
+          updateActiveNotification(active, true);
+        }
+      }
+    });
+  }
+
+  // ---- Timer engine (works on whichever task is active) ----
+  function runInterval() {
+    if (timerId !== null) return; // already running
+    timerId = setInterval(() => {
+      const task = getActiveTask();
+      if (!task) { stopInterval(); return; }
+
+      if (task.remainingSeconds > 0) {
+        task.remainingSeconds--;
+        updateFocusScreen(); // lightweight - won't disturb a drag in progress
+        saveTasks();
+        // Refresh the notification every 10s (not every second - avoids
+        // spamming the notification system and draining battery)
+        if (task.remainingSeconds % 10 === 0) {
+          updateActiveNotification(task, false);
+        }
+      } else {
+        task.status = 'completed';
+        stopInterval();
+        clearActiveNotification();
+        showCompletionNotification(task);
+        activeTaskId = null;
+        render();
+        showListView(); // nothing left to focus on, so head back to the list
+      }
+    }, 1000);
+  }
+
+  function stopInterval() {
+    clearInterval(timerId);
+    timerId = null;
+  }
+
+  // ---- Button hookups ----
+  addTaskBtn.addEventListener('click', addTask);
+
+  // Pause toggles between pausing and resuming, without leaving the Focus Screen
+  focusPauseBtn.addEventListener('click', () => {
+    const active = getActiveTask();
+    if (timerId !== null) {
+      stopInterval();
+      focusPauseBtn.textContent = 'Resume';
+      if (active) updateActiveNotification(active, true);
+    } else {
+      runInterval();
+      focusPauseBtn.textContent = 'Pause';
+      if (active) updateActiveNotification(active, false);
+    }
+  });
+
+  // Break now opens a confirmation modal instead of acting immediately
+  focusBreakBtn.addEventListener('click', () => {
+    breakOverlay.classList.add('open');
+  });
+
+  breakCancelBtn.addEventListener('click', () => {
+    // Just close the popup - timer keeps running exactly as it was
+    breakOverlay.classList.remove('open');
+  });
+
+  breakConfirmBtn.addEventListener('click', () => {
+    breakOverlay.classList.remove('open');
+    // Stop the countdown but keep the remaining time and status exactly
+    // where they were, then head back to the task list.
+    stopInterval();
+    activeTaskId = null;
+    focusPauseBtn.textContent = 'Pause'; // reset label for next time
+    clearActiveNotification();
+    render();
+    showListView();
+  });
+
+  // First render (loads anything saved from before, then draws it)
+  loadTasks();
+  render();
+
+  // Registers the service worker so the app can work offline once installed
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+
+</body>
+</html>
