@@ -248,6 +248,28 @@
     margin-bottom: 4px;
   }
 
+  .subtask-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .subtask-edit-row .modal-input {
+    flex: 1;
+  }
+
+  .subtask-remove-btn {
+    background: none;
+    border: none;
+    color: #C78A3A;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
   /* --- Break confirmation modal subtext --- */
   .menu-subtext {
     font-size: 0.85rem;
@@ -327,7 +349,7 @@
     gap: 8px;
   }
 
-  .quick-duration-btn {
+  .quick-duration-btn, .edit-quick-duration-btn {
     flex: 1 1 30%;
     padding: 8px 0;
     border: none;
@@ -338,7 +360,7 @@
     cursor: pointer;
   }
 
-  .quick-duration-btn.selected {
+  .quick-duration-btn.selected, .edit-quick-duration-btn.selected {
     background-color: #9FD8CB;
     color: #1B2A32;
     font-weight: 600;
@@ -732,6 +754,7 @@
   <div class="menu">
     <div class="menu-title" id="menuTaskName">Task name</div>
     <button class="menu-btn" id="menuStartBtn">▶ Start</button>
+    <button class="menu-btn" id="menuResetBtn" style="display: none;">↺ Reset</button>
     <button class="menu-btn" id="menuEditBtn">✏ Edit</button>
     <button class="menu-btn" id="menuDoneBtn">✓ Done</button>
     <button class="menu-btn" id="menuCarryBtn">➡ Carry to Next Day</button>
@@ -750,12 +773,50 @@
   </div>
 </div>
 
-<!-- Custom Edit Task popup (replaces the native browser prompt) -->
+<!-- Shown when the Focus Mode timer reaches 00:00 - keeps the user in
+     Focus Mode context instead of silently dropping them back to the list -->
+<div class="overlay" id="timesUpOverlay">
+  <div class="menu">
+    <div class="menu-title">Time's Up!</div>
+    <div class="menu-subtext" id="timesUpTaskName"></div>
+    <button class="menu-btn" id="timesUpRestartBtn">Restart</button>
+    <button class="menu-btn cancel" id="timesUpBackBtn">Back</button>
+  </div>
+</div>
+
+<!-- Custom Edit Task popup (matches the Add Task modal structure) -->
 <div class="overlay" id="editOverlay">
   <div class="menu">
     <div class="menu-title">Edit Task</div>
-    <input type="text" id="editNameInput" class="modal-input" placeholder="Task name">
-    <input type="number" id="editMinutesInput" class="modal-input" placeholder="Minutes" min="1">
+
+    <label class="modal-label">Task name</label>
+    <input type="text" id="editNameInput" class="modal-input" placeholder="">
+
+    <label class="modal-label">Subtasks</label>
+    <div id="editSubtaskInputsContainer"></div>
+    <button type="button" class="add-subtask-btn" id="editAddSubtaskInputBtn">+ Add Subtask</button>
+
+    <label class="modal-label">Timer (minutes)</label>
+    <input type="number" id="editMinutesInput" class="modal-input" placeholder="" min="1">
+
+    <div class="quick-duration-row">
+      <button class="edit-quick-duration-btn" data-min="5">5 min</button>
+      <button class="edit-quick-duration-btn" data-min="10">10 min</button>
+      <button class="edit-quick-duration-btn" data-min="15">15 min</button>
+      <button class="edit-quick-duration-btn" data-min="25">25 min</button>
+      <button class="edit-quick-duration-btn" data-min="45">45 min</button>
+      <button class="edit-quick-duration-btn" data-min="60">60 min</button>
+      <button class="edit-quick-duration-btn" data-min="custom">Custom</button>
+    </div>
+
+    <label class="modal-label">Date</label>
+    <div class="date-option-row">
+      <button class="date-option-btn" id="editDateOptToday">Today</button>
+      <button class="date-option-btn" id="editDateOptTomorrow">Tomorrow</button>
+      <button class="date-option-btn" id="editDateOptChoose">Choose date</button>
+    </div>
+    <div class="chosen-date-preview" id="editChosenDatePreview"></div>
+
     <button class="menu-btn" id="editSaveBtn">Save</button>
     <button class="menu-btn cancel" id="editCancelBtn">Cancel</button>
   </div>
@@ -838,6 +899,10 @@
   const ringProgress = document.getElementById('ringProgress');
   const ringDot = document.getElementById('ringDot');
   const breakOverlay = document.getElementById('breakOverlay');
+  const timesUpOverlay = document.getElementById('timesUpOverlay');
+  const timesUpTaskName = document.getElementById('timesUpTaskName');
+  const timesUpRestartBtn = document.getElementById('timesUpRestartBtn');
+  const timesUpBackBtn = document.getElementById('timesUpBackBtn');
   const breakConfirmBtn = document.getElementById('breakConfirmBtn');
   const breakCancelBtn = document.getElementById('breakCancelBtn');
   const openAddTaskBtn = document.getElementById('openAddTaskBtn');
@@ -1013,9 +1078,11 @@
     const clamped = Math.max(0, Math.min(1, fraction));
     ringProgress.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE * (1 - clamped));
 
-    // The dot sits at the tip of the remaining arc, sweeping clockwise
-    // from the top (12 o'clock) as time runs out.
-    const angle = 2 * Math.PI * (1 - clamped); // radians traveled clockwise from top
+    // The dot must sit at the exact tip of the visible arc. The arc's
+    // dashoffset math above is driven by "clamped" - the dot has to use
+    // that SAME value (not its complement) or it drifts out of sync and
+    // ends up travelling in the opposite direction from the arc.
+    const angle = 2 * Math.PI * clamped; // radians traveled clockwise from top
     const cx = 100 + RING_RADIUS * Math.sin(angle);
     const cy = 100 - RING_RADIUS * Math.cos(angle);
     ringDot.setAttribute('cx', cx);
@@ -1062,7 +1129,11 @@
   // treat it exactly like pressing the Break button instead of closing
   // the app and silently killing the timer.
   window.addEventListener('popstate', () => {
-    if (focusHistoryActive && focusView.style.display !== 'none') {
+    if (timesUpOverlay.classList.contains('open')) {
+      // The task already finished - back button should behave like "Back", not "Break"
+      history.pushState({ focusScreen: true }, '');
+      timesUpBackBtn.click();
+    } else if (focusHistoryActive && focusView.style.display !== 'none') {
       history.pushState({ focusScreen: true }, ''); // cancel the exit, stay put
       breakOverlay.classList.add('open');
     } else {
@@ -1423,6 +1494,7 @@
   const overlay = document.getElementById('overlay');
   const menuTaskName = document.getElementById('menuTaskName');
   const menuStartBtn = document.getElementById('menuStartBtn');
+  const menuResetBtn = document.getElementById('menuResetBtn');
   const menuEditBtn = document.getElementById('menuEditBtn');
   const menuDoneBtn = document.getElementById('menuDoneBtn');
   const menuCarryBtn = document.getElementById('menuCarryBtn');
@@ -1437,6 +1509,8 @@
     // If this task has already been started before (even if paused
     // or on a break), show "Continue" instead of "Start"
     menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
+    // Reset only makes sense once a task has actually been started before
+    menuResetBtn.style.display = task.status === 'in-progress' ? 'block' : 'none';
     // Carrying forward only makes sense for tasks that aren't finished yet
     menuCarryBtn.style.display = task.status === 'completed' ? 'none' : 'block';
     overlay.classList.add('open');
@@ -1474,20 +1548,112 @@
     if (e.target === overlay) closeTaskMenu();
   });
 
-  // ---- Custom Edit modal (replaces the native prompt() dialogs) ----
+  // ---- Custom Edit modal (mirrors the Add Task modal structure) ----
   let editTaskId = null;
+  let editTaskDateKey = null; // which date this task currently belongs to / will be moved to
   const editOverlay = document.getElementById('editOverlay');
   const editNameInput = document.getElementById('editNameInput');
   const editMinutesInput = document.getElementById('editMinutesInput');
+  const editSubtaskInputsContainer = document.getElementById('editSubtaskInputsContainer');
+  const editAddSubtaskInputBtn = document.getElementById('editAddSubtaskInputBtn');
+  const editQuickDurationBtns = document.querySelectorAll('.edit-quick-duration-btn');
+  const editDateOptToday = document.getElementById('editDateOptToday');
+  const editDateOptTomorrow = document.getElementById('editDateOptTomorrow');
+  const editDateOptChoose = document.getElementById('editDateOptChoose');
+  const editChosenDatePreview = document.getElementById('editChosenDatePreview');
   const editSaveBtn = document.getElementById('editSaveBtn');
   const editCancelBtn = document.getElementById('editCancelBtn');
+
+  // Creates one subtask row. If `subtask` is given, pre-fills its name and
+  // tags the row with its original id (so Save can tell "renamed existing"
+  // apart from "brand new") - otherwise it's a blank new-subtask row.
+  // Every row has a remove (x) button so existing subtasks can be deleted.
+  function addEditSubtaskRow(subtask) {
+    const row = document.createElement('div');
+    row.className = 'subtask-edit-row';
+    if (subtask) row.dataset.subtaskId = subtask.id;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'modal-input subtask-input';
+    input.placeholder = 'Subtask name';
+    if (subtask) input.value = subtask.name;
+    row.appendChild(input);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'subtask-remove-btn';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => row.remove());
+    row.appendChild(removeBtn);
+
+    editSubtaskInputsContainer.appendChild(row);
+    return row;
+  }
+
+  editAddSubtaskInputBtn.addEventListener('click', () => {
+    const row = addEditSubtaskRow(null);
+    row.querySelector('input').focus();
+  });
+
+  editQuickDurationBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      editQuickDurationBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      if (btn.dataset.min === 'custom') {
+        editMinutesInput.value = '';
+        editMinutesInput.focus();
+      } else {
+        editMinutesInput.value = btn.dataset.min;
+      }
+    });
+  });
+
+  editMinutesInput.addEventListener('input', () => {
+    const matchingPreset = [...editQuickDurationBtns].find(b => b.dataset.min === editMinutesInput.value);
+    editQuickDurationBtns.forEach(b => b.classList.toggle('selected', b === matchingPreset));
+  });
+
+  function updateEditDateOptionHighlight() {
+    editDateOptToday.classList.toggle('selected', editTaskDateKey === todayKey());
+    editDateOptTomorrow.classList.toggle('selected', editTaskDateKey === addDaysToKey(todayKey(), 1));
+    const isCustomChoice = editTaskDateKey !== todayKey() && editTaskDateKey !== addDaysToKey(todayKey(), 1);
+    editDateOptChoose.classList.toggle('selected', isCustomChoice);
+    const label = formatDateLabel(editTaskDateKey);
+    editChosenDatePreview.textContent = 'Task will be on: ' + label.sub;
+  }
+
+  editDateOptToday.addEventListener('click', () => {
+    editTaskDateKey = todayKey();
+    updateEditDateOptionHighlight();
+  });
+
+  editDateOptTomorrow.addEventListener('click', () => {
+    editTaskDateKey = addDaysToKey(todayKey(), 1);
+    updateEditDateOptionHighlight();
+  });
+
+  editDateOptChoose.addEventListener('click', () => {
+    editOverlay.classList.remove('open');
+    calendarPurpose = 'pickForEditTask';
+    openCalendar();
+  });
 
   function editTask(id) {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     editTaskId = id;
+    editTaskDateKey = selectedDateKey; // the task currently lives on whichever date is being viewed
+
     editNameInput.value = task.name;
-    editMinutesInput.value = Math.round(task.durationSeconds / 60);
+    const currentMinutes = Math.round(task.durationSeconds / 60);
+    editMinutesInput.value = currentMinutes;
+    editQuickDurationBtns.forEach(b => b.classList.toggle('selected', b.dataset.min === String(currentMinutes)));
+
+    editSubtaskInputsContainer.innerHTML = '';
+    (task.subtasks || []).forEach(sub => addEditSubtaskRow(sub));
+
+    updateEditDateOptionHighlight();
     editOverlay.classList.add('open');
   }
 
@@ -1511,6 +1677,37 @@
         task.remainingSeconds = task.durationSeconds;
       }
     }
+
+    // Rebuild subtasks from whatever rows are still present - existing
+    // ones keep their id (and therefore their completed state) and just
+    // get renamed; rows with no id are brand new; removed rows are simply
+    // absent from this list already, so they drop out naturally.
+    const existingSubtasks = task.subtasks || [];
+    let nextSubtaskId = existingSubtasks.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+    const rows = [...editSubtaskInputsContainer.querySelectorAll('.subtask-edit-row')];
+    const newSubtasks = [];
+    rows.forEach((row) => {
+      const subName = row.querySelector('.subtask-input').value.trim();
+      if (!subName) return; // skip empty rows
+      const existingId = row.dataset.subtaskId ? Number(row.dataset.subtaskId) : null;
+      const existing = existingId ? existingSubtasks.find(s => s.id === existingId) : null;
+      if (existing) {
+        existing.name = subName; // keep id + completed state, just rename
+        newSubtasks.push(existing);
+      } else {
+        newSubtasks.push({ id: nextSubtaskId++, name: subName, completed: false });
+      }
+    });
+    task.subtasks = newSubtasks;
+
+    // If the date was changed, MOVE the task to that date
+    if (editTaskDateKey !== selectedDateKey) {
+      const index = tasks.findIndex(t => t.id === task.id);
+      if (index !== -1) tasks.splice(index, 1);
+      if (!tasksByDate[editTaskDateKey]) tasksByDate[editTaskDateKey] = [];
+      tasksByDate[editTaskDateKey].push(task);
+    }
+
     render();
     closeEditModal();
   });
@@ -1585,13 +1782,14 @@
   function updateActiveNotification(task, paused) {
     if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
     navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification(task.name, {
-        body: (paused ? 'Paused - ' : '') + formatTimeHMS(task.remainingSeconds) + ' remaining',
+      reg.showNotification('One Task', {
+        body: task.name + ' - ' + (paused ? 'Paused - ' : '') + formatTimeHMS(task.remainingSeconds) + ' remaining',
         tag: 'active-timer',
         renotify: false,
         silent: true,
         requireInteraction: true,
         icon: 'icon-192.png',
+        badge: 'icon-192.png',
         actions: paused ? [] : [{ action: 'pause', title: 'Pause' }]
       });
     });
@@ -1607,9 +1805,11 @@
   function showCompletionNotification(task) {
     if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
     navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification("Time's up! " + task.name, {
+      reg.showNotification('One Task', {
+        body: "Time's up! " + task.name,
         tag: 'timer-done',
-        icon: 'icon-192.png'
+        icon: 'icon-192.png',
+        badge: 'icon-192.png'
       });
     });
   }
@@ -1649,9 +1849,11 @@
         stopInterval();
         clearActiveNotification();
         showCompletionNotification(task);
-        activeTaskId = null;
         render();
-        showListView(); // nothing left to focus on, so head back to the list
+        // Stay in Focus Mode context - show the completion popup instead
+        // of silently dropping back to the list
+        timesUpTaskName.textContent = task.name;
+        timesUpOverlay.classList.add('open');
       }
     }, 1000);
   }
@@ -1699,6 +1901,28 @@
     breakOverlay.classList.remove('open');
   });
 
+  // ---- Time's Up completion modal ----
+  timesUpRestartBtn.addEventListener('click', () => {
+    const task = getActiveTask();
+    timesUpOverlay.classList.remove('open');
+    if (!task) return;
+
+    // Restart from the ORIGINAL duration, not wherever it left off (it was at 0 anyway)
+    task.remainingSeconds = task.durationSeconds;
+    task.status = 'in-progress';
+    focusPauseBtn.textContent = 'Pause';
+    render();
+    runInterval();
+    updateActiveNotification(task, false);
+  });
+
+  timesUpBackBtn.addEventListener('click', () => {
+    timesUpOverlay.classList.remove('open');
+    activeTaskId = null;
+    render();
+    showListView();
+  });
+
   breakConfirmBtn.addEventListener('click', () => {
     breakOverlay.classList.remove('open');
     // Stop the countdown but keep the remaining time and status exactly
@@ -1716,22 +1940,35 @@
   nextDayBtn.addEventListener('click', () => switchToDate(addDaysToKey(selectedDateKey, 1)));
   todayBtn.addEventListener('click', () => switchToDate(todayKey()));
 
-  // ---- Carry Forward (copies an incomplete task to the next day) ----
-  menuCarryBtn.addEventListener('click', () => {
+  // ---- Reset (returns an in-progress task's timer to its full original duration) ----
+  menuResetBtn.addEventListener('click', () => {
     const task = tasks.find(t => t.id === menuTaskId);
-    if (!task) { closeTaskMenu(); return; }
+    if (task) {
+      task.remainingSeconds = task.durationSeconds; // NOT 00:00 - back to the original duration
+      render();
+    }
+    closeTaskMenu();
+  });
+
+  // ---- Carry to Next Day (MOVES the task - removes it from today, adds it to tomorrow) ----
+  menuCarryBtn.addEventListener('click', () => {
+    const index = tasks.findIndex(t => t.id === menuTaskId);
+    if (index === -1) { closeTaskMenu(); return; }
+
+    // If somehow the task being moved is the active one, stop its timer first
+    if (menuTaskId === activeTaskId) {
+      stopInterval();
+      activeTaskId = null;
+      clearActiveNotification();
+    }
+
+    const [task] = tasks.splice(index, 1); // remove from today - mutates in place, keeping tasksByDate in sync
 
     const targetKey = addDaysToKey(selectedDateKey, 1);
     if (!tasksByDate[targetKey]) tasksByDate[targetKey] = [];
-    tasksByDate[targetKey].push({
-      id: nextId++,
-      name: task.name,
-      durationSeconds: task.durationSeconds,
-      remainingSeconds: task.durationSeconds,
-      status: 'not-started'
-    });
-    // Only the new day's list changed - today's history stays exactly as it was
-    saveTasks();
+    tasksByDate[targetKey].push(task); // move the SAME task object - name, duration, subtasks, and status all travel with it
+
+    render();
     closeTaskMenu();
   });
 
@@ -1739,9 +1976,12 @@
   let calViewYear, calViewMonth; // which month the calendar is currently showing
 
   function openCalendar() {
-    // When picking a date for a new task, start on whatever date is
-    // currently chosen in that modal; otherwise use the main viewed date.
-    const baseKey = (calendarPurpose === 'pickForAddTask') ? newTaskDateKey : selectedDateKey;
+    // When picking a date for a task (new or being edited), start on
+    // whatever date is currently chosen in that modal; otherwise use the
+    // main viewed date.
+    let baseKey = selectedDateKey;
+    if (calendarPurpose === 'pickForAddTask') baseKey = newTaskDateKey;
+    if (calendarPurpose === 'pickForEditTask') baseKey = editTaskDateKey;
     const d = keyToDate(baseKey);
     calViewYear = d.getFullYear();
     calViewMonth = d.getMonth();
@@ -1751,11 +1991,14 @@
 
   function closeCalendar() {
     calendarOverlay.classList.remove('open');
-    // If we were picking a date for a new task and the user backed out
+    // If we were picking a date for a task and the user backed out
     // without choosing one, bring that modal back up as it was
     if (calendarPurpose === 'pickForAddTask') {
       calendarPurpose = 'navigate';
       addTaskOverlay.classList.add('open');
+    } else if (calendarPurpose === 'pickForEditTask') {
+      calendarPurpose = 'navigate';
+      editOverlay.classList.add('open');
     }
   }
 
@@ -1766,7 +2009,9 @@
     const firstOfMonth = new Date(calViewYear, calViewMonth, 1);
     const startWeekday = firstOfMonth.getDay(); // 0 = Sunday
     const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
-    const highlightKey = (calendarPurpose === 'pickForAddTask') ? newTaskDateKey : selectedDateKey;
+    let highlightKey = selectedDateKey;
+    if (calendarPurpose === 'pickForAddTask') highlightKey = newTaskDateKey;
+    if (calendarPurpose === 'pickForEditTask') highlightKey = editTaskDateKey;
 
     // Blank filler cells so day 1 lines up under the correct weekday
     for (let i = 0; i < startWeekday; i++) {
@@ -1789,6 +2034,12 @@
           calendarOverlay.classList.remove('open');
           addTaskOverlay.classList.add('open');
           updateDateOptionHighlight();
+        } else if (calendarPurpose === 'pickForEditTask') {
+          editTaskDateKey = key;
+          calendarPurpose = 'navigate';
+          calendarOverlay.classList.remove('open');
+          editOverlay.classList.add('open');
+          updateEditDateOptionHighlight();
         } else {
           switchToDate(key);
           calendarOverlay.classList.remove('open');
