@@ -298,6 +298,145 @@
     padding: 4px 6px;
   }
 
+  /* --- Header with calendar button --- */
+  .app-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .app-header h1 {
+    margin-bottom: 0;
+  }
+
+  .calendar-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  /* --- Date navigation bar --- */
+  .date-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+
+  .date-nav-btn {
+    background: none;
+    border: none;
+    color: #9FD8CB;
+    font-size: 1.4rem;
+    line-height: 1;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+
+  .date-label {
+    text-align: center;
+    min-width: 140px;
+  }
+
+  #dateLabelMain {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #F2EFE9;
+  }
+
+  .date-label-sub {
+    font-size: 0.78rem;
+    color: #C7D6D2;
+  }
+
+  .today-btn {
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .progress-label {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #9FD8CB;
+    margin-bottom: 16px;
+  }
+
+  /* --- Calendar popup --- */
+  .calendar-menu {
+    max-width: 340px;
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .calendar-header .menu-title {
+    margin-bottom: 0;
+  }
+
+  .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.75rem;
+    color: #C7D6D2;
+    margin-top: 4px;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .calendar-day {
+    background: none;
+    border: none;
+    color: #F2EFE9;
+    padding: 8px 0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .calendar-day:hover {
+    background-color: #3A4C55;
+  }
+
+  .calendar-day.today {
+    border: 1px solid #9FD8CB;
+  }
+
+  .calendar-day.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .calendar-day.empty {
+    cursor: default;
+  }
+
+  .calendar-day.empty:hover {
+    background: none;
+  }
+
   .empty-msg {
     text-align: center;
     color: #C7D6D2;
@@ -365,7 +504,10 @@
 <body>
 
 <div class="app">
-  <h1>Focus Timer</h1>
+  <div class="app-header">
+    <h1>Focus Timer</h1>
+    <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
+  </div>
 
   <!-- LIST VIEW: shown by default, hidden while a task is in focus -->
   <div id="listView">
@@ -374,6 +516,18 @@
       <input type="number" id="taskMinutesInput" placeholder="Min" min="1" value="25">
       <button id="addTaskBtn">Add</button>
     </div>
+
+    <div class="date-bar">
+      <button id="prevDayBtn" class="date-nav-btn" aria-label="Previous day">‹</button>
+      <div class="date-label">
+        <div id="dateLabelMain">Today</div>
+        <div id="dateLabelSub" class="date-label-sub">Sep 13, 2026</div>
+      </div>
+      <button id="nextDayBtn" class="date-nav-btn" aria-label="Next day">›</button>
+      <button id="todayBtn" class="today-btn" style="display: none;">Today</button>
+    </div>
+
+    <div class="progress-label" id="progressLabel">0 / 0 tasks completed</div>
 
     <ul class="task-list" id="taskList"></ul>
   </div>
@@ -410,6 +564,7 @@
     <button class="menu-btn" id="menuStartBtn">▶ Start</button>
     <button class="menu-btn" id="menuEditBtn">✏ Edit</button>
     <button class="menu-btn" id="menuDoneBtn">✓ Done</button>
+    <button class="menu-btn" id="menuCarryBtn">➡ Carry to Next Day</button>
     <button class="menu-btn danger" id="menuDeleteBtn">🗑 Delete</button>
     <button class="menu-btn cancel" id="menuCancelBtn">Cancel</button>
   </div>
@@ -446,6 +601,22 @@
   </div>
 </div>
 
+<!-- Calendar popup -->
+<div class="overlay" id="calendarOverlay">
+  <div class="menu calendar-menu">
+    <div class="calendar-header">
+      <button id="calPrevMonthBtn" class="date-nav-btn">‹</button>
+      <div class="menu-title" id="calMonthLabel">Month Year</div>
+      <button id="calNextMonthBtn" class="date-nav-btn">›</button>
+    </div>
+    <div class="calendar-weekdays">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <button class="menu-btn cancel" id="calCloseBtn">Close</button>
+  </div>
+</div>
+
 <script>
   // ---- Element references ----
   const listView = document.getElementById('listView');
@@ -466,30 +637,116 @@
   const addTaskBtn = document.getElementById('addTaskBtn');
   const taskListEl = document.getElementById('taskList');
 
-  // ---- App state ----
-  let tasks = [];          // list of all tasks
-  let activeTaskId = null; // which task is currently shown in the main timer
-  let timerId = null;      // the running countdown (like before)
-  let nextId = 1;          // simple counter to give each task a unique id
+  // Date navigation elements
+  const calendarBtn = document.getElementById('calendarBtn');
+  const prevDayBtn = document.getElementById('prevDayBtn');
+  const nextDayBtn = document.getElementById('nextDayBtn');
+  const todayBtn = document.getElementById('todayBtn');
+  const dateLabelMain = document.getElementById('dateLabelMain');
+  const dateLabelSub = document.getElementById('dateLabelSub');
+  const progressLabel = document.getElementById('progressLabel');
+  const calendarOverlay = document.getElementById('calendarOverlay');
+  const calMonthLabel = document.getElementById('calMonthLabel');
+  const calendarGrid = document.getElementById('calendarGrid');
+  const calPrevMonthBtn = document.getElementById('calPrevMonthBtn');
+  const calNextMonthBtn = document.getElementById('calNextMonthBtn');
+  const calCloseBtn = document.getElementById('calCloseBtn');
 
-  // Saves the current task list to the phone so it survives closing the app
+  // ---- App state ----
+  // Tasks are now grouped by date: { "2026-09-13": [task, task, ...], ... }
+  // "tasks" always points at the array for whichever date is selected -
+  // this keeps every existing task function (add/delete/edit/drag/etc.)
+  // working unchanged, since they just read/write the "tasks" array.
+  let tasksByDate = {};
+  let selectedDateKey = '';  // e.g. "2026-09-13"
+  let tasks = [];            // reference into tasksByDate[selectedDateKey]
+  let activeTaskId = null;   // which task is currently shown in the main timer
+  let timerId = null;        // the running countdown (like before)
+  let nextId = 1;            // simple counter to give each task a unique id
+
+  // ---- Date helpers ----
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  // Local YYYY-MM-DD key (avoids UTC/timezone shifting bugs from toISOString)
+  function dateToKey(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function keyToDate(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function todayKey() {
+    return dateToKey(new Date());
+  }
+
+  function addDaysToKey(key, days) {
+    const d = keyToDate(key);
+    d.setDate(d.getDate() + days);
+    return dateToKey(d);
+  }
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function formatDateLabel(key) {
+    const diffDays = Math.round((keyToDate(key) - keyToDate(todayKey())) / 86400000);
+    const d = keyToDate(key);
+    const sub = MONTH_NAMES[d.getMonth()].slice(0, 3) + ' ' + d.getDate() + ', ' + d.getFullYear();
+    if (diffDays === 0) return { main: 'Today', sub };
+    if (diffDays === -1) return { main: 'Yesterday', sub };
+    if (diffDays === 1) return { main: 'Tomorrow', sub };
+    return { main: MONTH_NAMES[d.getMonth()] + ' ' + d.getDate(), sub: 'Day of the week: ' + d.toLocaleDateString(undefined, { weekday: 'long' }) };
+  }
+
+  // Switches which date's task list is currently shown/edited.
+  function switchToDate(key) {
+    selectedDateKey = key;
+    if (!tasksByDate[key]) tasksByDate[key] = [];
+    tasks = tasksByDate[key];
+    render();
+    updateDateBar();
+  }
+
+  function updateDateBar() {
+    const label = formatDateLabel(selectedDateKey);
+    dateLabelMain.textContent = label.main;
+    dateLabelSub.textContent = label.sub;
+    todayBtn.style.display = (selectedDateKey === todayKey()) ? 'none' : 'inline-block';
+  }
+
+  // Saves everything (all dates) to the phone so it survives closing the app
   function saveTasks() {
-    localStorage.setItem('oneTaskAtATime_tasks', JSON.stringify(tasks));
+    localStorage.setItem('oneTaskAtATime_tasksByDate', JSON.stringify(tasksByDate));
     localStorage.setItem('oneTaskAtATime_nextId', String(nextId));
   }
 
-  // Loads any previously saved tasks when the app opens
+  // Loads any previously saved tasks when the app opens, migrating the old
+  // single-list format (from before dates existed) into "today" if found.
   function loadTasks() {
-    const saved = localStorage.getItem('oneTaskAtATime_tasks');
+    const savedByDate = localStorage.getItem('oneTaskAtATime_tasksByDate');
     const savedNextId = localStorage.getItem('oneTaskAtATime_nextId');
-    if (saved) {
+    const oldFlatTasks = localStorage.getItem('oneTaskAtATime_tasks');
+
+    if (savedByDate) {
       try {
-        tasks = JSON.parse(saved);
+        tasksByDate = JSON.parse(savedByDate);
       } catch (e) {
-        tasks = [];
+        tasksByDate = {};
+      }
+    } else if (oldFlatTasks) {
+      // Migrating from the pre-dates version of the app
+      try {
+        tasksByDate[todayKey()] = JSON.parse(oldFlatTasks);
+      } catch (e) {
+        tasksByDate = {};
       }
     }
     if (savedNextId) nextId = Number(savedNextId);
+
+    selectedDateKey = todayKey();
+    if (!tasksByDate[selectedDateKey]) tasksByDate[selectedDateKey] = [];
+    tasks = tasksByDate[selectedDateKey];
   }
 
   // ---- Helpers ----
@@ -640,11 +897,17 @@
     });
   }
 
+  function updateProgressLabel() {
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    progressLabel.textContent = completed + ' / ' + tasks.length + ' tasks completed';
+  }
+
   // Full refresh: focus screen (if open) + task list. Use this after
   // structural changes (add/delete/edit/status/select/reorder).
   function render() {
     updateFocusScreen();
     renderTaskList();
+    updateProgressLabel();
     saveTasks();
   }
 
@@ -758,6 +1021,7 @@
   const menuStartBtn = document.getElementById('menuStartBtn');
   const menuEditBtn = document.getElementById('menuEditBtn');
   const menuDoneBtn = document.getElementById('menuDoneBtn');
+  const menuCarryBtn = document.getElementById('menuCarryBtn');
   const menuDeleteBtn = document.getElementById('menuDeleteBtn');
   const menuCancelBtn = document.getElementById('menuCancelBtn');
 
@@ -769,6 +1033,8 @@
     // If this task has already been started before (even if paused
     // or on a break), show "Continue" instead of "Start"
     menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
+    // Carrying forward only makes sense for tasks that aren't finished yet
+    menuCarryBtn.style.display = task.status === 'completed' ? 'none' : 'block';
     overlay.classList.add('open');
   }
 
@@ -1036,9 +1302,95 @@
     showListView();
   });
 
+  // ---- Date navigation ----
+  prevDayBtn.addEventListener('click', () => switchToDate(addDaysToKey(selectedDateKey, -1)));
+  nextDayBtn.addEventListener('click', () => switchToDate(addDaysToKey(selectedDateKey, 1)));
+  todayBtn.addEventListener('click', () => switchToDate(todayKey()));
+
+  // ---- Carry Forward (copies an incomplete task to the next day) ----
+  menuCarryBtn.addEventListener('click', () => {
+    const task = tasks.find(t => t.id === menuTaskId);
+    if (!task) { closeTaskMenu(); return; }
+
+    const targetKey = addDaysToKey(selectedDateKey, 1);
+    if (!tasksByDate[targetKey]) tasksByDate[targetKey] = [];
+    tasksByDate[targetKey].push({
+      id: nextId++,
+      name: task.name,
+      durationSeconds: task.durationSeconds,
+      remainingSeconds: task.durationSeconds,
+      status: 'not-started'
+    });
+    // Only the new day's list changed - today's history stays exactly as it was
+    saveTasks();
+    closeTaskMenu();
+  });
+
+  // ---- Calendar ----
+  let calViewYear, calViewMonth; // which month the calendar is currently showing
+
+  function openCalendar() {
+    const d = keyToDate(selectedDateKey);
+    calViewYear = d.getFullYear();
+    calViewMonth = d.getMonth();
+    renderCalendar();
+    calendarOverlay.classList.add('open');
+  }
+
+  function closeCalendar() {
+    calendarOverlay.classList.remove('open');
+  }
+
+  function renderCalendar() {
+    calMonthLabel.textContent = MONTH_NAMES[calViewMonth] + ' ' + calViewYear;
+    calendarGrid.innerHTML = '';
+
+    const firstOfMonth = new Date(calViewYear, calViewMonth, 1);
+    const startWeekday = firstOfMonth.getDay(); // 0 = Sunday
+    const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+
+    // Blank filler cells so day 1 lines up under the correct weekday
+    for (let i = 0; i < startWeekday; i++) {
+      const filler = document.createElement('span');
+      filler.className = 'calendar-day empty';
+      calendarGrid.appendChild(filler);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = dateToKey(new Date(calViewYear, calViewMonth, day));
+      const btn = document.createElement('button');
+      btn.className = 'calendar-day';
+      if (key === todayKey()) btn.classList.add('today');
+      if (key === selectedDateKey) btn.classList.add('selected');
+      btn.textContent = day;
+      btn.addEventListener('click', () => {
+        switchToDate(key);
+        closeCalendar();
+      });
+      calendarGrid.appendChild(btn);
+    }
+  }
+
+  calendarBtn.addEventListener('click', openCalendar);
+  calCloseBtn.addEventListener('click', closeCalendar);
+  calendarOverlay.addEventListener('click', (e) => {
+    if (e.target === calendarOverlay) closeCalendar();
+  });
+  calPrevMonthBtn.addEventListener('click', () => {
+    calViewMonth--;
+    if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+    renderCalendar();
+  });
+  calNextMonthBtn.addEventListener('click', () => {
+    calViewMonth++;
+    if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+    renderCalendar();
+  });
+
   // First render (loads anything saved from before, then draws it)
   loadTasks();
   render();
+  updateDateBar();
 
   // Registers the service worker so the app can work offline once installed
   if ('serviceWorker' in navigator) {
