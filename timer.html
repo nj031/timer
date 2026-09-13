@@ -1796,12 +1796,65 @@
     journalView.style.display = 'none';
     addNoteFab.style.display = 'none';
     noteEditView.style.display = 'block';
+    pushNoteHistory();
   }
 
   function closeNoteEditor() {
     noteEditView.style.display = 'none';
     journalView.style.display = 'block';
     addNoteFab.style.display = 'flex';
+  }
+
+  // Saves whatever is currently typed (if anything) and returns to the
+  // Journal list. Shared by the in-app Back arrow AND the hardware/system
+  // back button, so both behave identically.
+  function saveCurrentNoteAndClose() {
+    const title = noteTitleInput.value.trim();
+    const content = noteContentInput.value.trim();
+
+    if (title || content) {
+      if (!journalByDate[journalSelectedDateKey]) journalByDate[journalSelectedDateKey] = [];
+      const now = Date.now();
+      if (editingNoteId) {
+        const note = journalByDate[journalSelectedDateKey].find(n => n.id === editingNoteId);
+        if (note) { note.title = title; note.content = content; note.savedAt = now; }
+      } else {
+        journalByDate[journalSelectedDateKey].push({ id: nextJournalId++, title, content, savedAt: now });
+      }
+      saveJournal();
+    }
+    closeNoteEditor();
+    renderJournalView();
+  }
+
+  // ---- History protection for Journal & Note Editor ----
+  // Mirrors the same trick used for Focus Mode: pushing a "checkpoint"
+  // into the browser history means the phone's hardware Back button has
+  // somewhere to land INSIDE the app, instead of exiting it entirely.
+  let journalHistoryActive = false;
+  let noteHistoryActive = false;
+
+  function pushJournalHistory() {
+    if (!journalHistoryActive) {
+      try { history.pushState({ view: 'journal' }, ''); journalHistoryActive = true; } catch (e) { /* sandboxed preview - see showFocusView() note */ }
+    }
+  }
+  function popJournalHistory() {
+    if (journalHistoryActive) {
+      journalHistoryActive = false;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
+  }
+  function pushNoteHistory() {
+    if (!noteHistoryActive) {
+      try { history.pushState({ view: 'note' }, ''); noteHistoryActive = true; } catch (e) { /* see note above */ }
+    }
+  }
+  function popNoteHistory() {
+    if (noteHistoryActive) {
+      noteHistoryActive = false;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
   }
 
   // ---- Note options menu (three-dot) and Delete Note ----
@@ -2077,6 +2130,15 @@
     } else if (focusHistoryActive && focusView.style.display !== 'none') {
       history.pushState({ focusScreen: true }, ''); // cancel the exit, stay put
       breakOverlay.classList.add('open');
+    } else if (noteHistoryActive && noteEditView.style.display !== 'none') {
+      // This history entry was already consumed by the natural back
+      // navigation (unlike Focus Mode above, we're not cancelling it) -
+      // just sync our own state and save exactly like the in-app arrow would.
+      noteHistoryActive = false;
+      saveCurrentNoteAndClose();
+    } else if (journalHistoryActive && journalView.style.display !== 'none') {
+      journalHistoryActive = false;
+      hideJournalView();
     } else {
       focusHistoryActive = false;
     }
@@ -3297,9 +3359,13 @@
     journalSelectedDateKey = todayKey(); // Journal always opens on Today from the Homepage
     showJournalView();
     renderJournalView();
+    pushJournalHistory();
   });
 
-  journalBackBtn.addEventListener('click', hideJournalView);
+  journalBackBtn.addEventListener('click', () => {
+    hideJournalView();
+    popJournalHistory();
+  });
   journalCalendarBtn.addEventListener('click', () => {
     calendarPurpose = 'pickForJournal';
     openCalendar();
@@ -3310,25 +3376,31 @@
   // Back now auto-saves the note before leaving - there's no separate
   // Save button anymore, so nothing typed is ever accidentally lost.
   noteBackBtn.addEventListener('click', () => {
-    const title = noteTitleInput.value.trim();
-    const content = noteContentInput.value.trim();
+    saveCurrentNoteAndClose();
+    popNoteHistory();
+  });
 
-    if (!title && !content) {
-      closeNoteEditor(); // nothing was written - nothing to save
-      return;
+  // If Android/Chrome restores this page from its back-forward cache
+  // (common after the hardware Back button closes and reopens the app),
+  // force a clean, known-good view state instead of trusting whatever
+  // was on screen at the moment it was closed. This resets display state
+  // directly rather than through showListView()/hideJournalView(), since
+  // those also call history.back() - which would be wrong here, as no
+  // real navigation is happening.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      journalView.style.display = 'none';
+      noteEditView.style.display = 'none';
+      addNoteFab.style.display = 'none';
+      focusView.style.display = 'none';
+      mainAppHeader.style.display = 'flex';
+      listView.style.display = 'block';
+      calendarBtn.style.display = 'block';
+      journalHistoryActive = false;
+      noteHistoryActive = false;
+      focusHistoryActive = false;
+      render();
     }
-
-    if (!journalByDate[journalSelectedDateKey]) journalByDate[journalSelectedDateKey] = [];
-    const now = Date.now();
-    if (editingNoteId) {
-      const note = journalByDate[journalSelectedDateKey].find(n => n.id === editingNoteId);
-      if (note) { note.title = title; note.content = content; note.savedAt = now; }
-    } else {
-      journalByDate[journalSelectedDateKey].push({ id: nextJournalId++, title, content, savedAt: now });
-    }
-    saveJournal();
-    closeNoteEditor();
-    renderJournalView();
   });
 
   // First render (loads anything saved from before, then draws it)
