@@ -1318,7 +1318,7 @@
       <h1>Note</h1>
       <button id="noteMenuBtn" class="calendar-btn note-menu-btn" style="display: none;" aria-label="Note options">⋮</button>
     </div>
-    <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Title">
+    <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Title" autocomplete="off" autocapitalize="sentences" spellcheck="false" name="note-title-nofill">
     <textarea id="noteContentInput" class="note-content-input" placeholder="Write your note..."></textarea>
     <button class="menu-btn note-save-btn" id="noteSaveBtn">Save</button>
   </div>
@@ -1385,7 +1385,7 @@
     <div class="menu-title">Edit Task</div>
 
     <label class="modal-label">Task name</label>
-    <input type="text" id="editNameInput" class="modal-input" placeholder="">
+    <input type="text" id="editNameInput" class="modal-input" placeholder="" autocomplete="off" autocapitalize="sentences" spellcheck="false" name="edit-task-nofill">
 
     <label class="modal-label">Subtasks</label>
     <div id="editSubtaskInputsContainer"></div>
@@ -1494,7 +1494,7 @@
     <div class="menu-title">Add Task</div>
 
     <label class="modal-label">Task name</label>
-    <input type="text" id="newTaskNameInput" class="modal-input" placeholder="">
+    <input type="text" id="newTaskNameInput" class="modal-input" placeholder="" autocomplete="off" autocapitalize="sentences" spellcheck="false" name="new-task-nofill">
 
     <label class="modal-label">Subtasks</label>
     <div id="subtaskInputsContainer"></div>
@@ -2128,6 +2128,8 @@
       row.className = 'tag-add-input-row';
       const input = document.createElement('input');
       input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
       input.className = 'modal-input';
       input.placeholder = 'New tag name';
       const confirmBtn = document.createElement('button');
@@ -2638,6 +2640,8 @@
     row.className = 'subtask-input-row';
     const input = document.createElement('input');
     input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
     input.className = 'modal-input subtask-input';
     input.placeholder = 'Subtask name';
     row.appendChild(input);
@@ -2937,6 +2941,8 @@
 
     const input = document.createElement('input');
     input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
     input.className = 'modal-input subtask-input';
     input.placeholder = 'Subtask name';
     if (subtask) input.value = subtask.name;
