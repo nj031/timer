@@ -346,7 +346,7 @@
     gap: 8px;
   }
 
-  .quick-duration-btn, .edit-quick-duration-btn {
+  .quick-duration-btn, .edit-quick-duration-btn, .timer-picker-btn, .edit-timer-picker-btn {
     flex: 1 1 30%;
     padding: 8px 0;
     border: none;
@@ -357,10 +357,61 @@
     cursor: pointer;
   }
 
-  .quick-duration-btn.selected, .edit-quick-duration-btn.selected {
+  .quick-duration-btn.selected, .edit-quick-duration-btn.selected, .timer-picker-btn.selected, .edit-timer-picker-btn.selected {
     background-color: #9FD8CB;
     color: #1B2A32;
     font-weight: 600;
+  }
+
+  /* --- Optional timer (Add/Edit Task modals) --- */
+  .add-timer-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .timer-set-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .timer-value-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .timer-remove-btn {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #C78A3A;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .timer-picker-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .timer-picker-heading {
+    text-align: center;
+    margin-bottom: -2px;
   }
 
   .date-option-row {
@@ -587,6 +638,12 @@
     user-select: none;
   }
 
+  .drag-handle-inactive {
+    opacity: 0.35;
+    cursor: default;
+    touch-action: auto;
+  }
+
   .task.dragging {
     opacity: 0.5;
   }
@@ -609,6 +666,45 @@
   .task-name {
     font-size: 1rem;
     font-weight: 600;
+  }
+
+  .task-tag-badge {
+    font-size: 0.7rem;
+    padding: 2px 9px;
+    border-radius: 20px;
+    border: 1px solid #9FD8CB;
+    color: #9FD8CB;
+    background: none;
+    white-space: nowrap;
+  }
+
+  .task-top-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .main-task-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #9FD8CB;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #1B2A32;
+    cursor: pointer;
+  }
+
+  .task.completed .main-task-checkbox {
+    background-color: #9FD8CB;
+  }
+
+  .task-subtasks-preview li.clickable {
+    cursor: pointer;
   }
 
   .task-duration {
@@ -669,6 +765,153 @@
     font-size: 1.3rem;
     cursor: pointer;
     padding: 4px 8px;
+  }
+
+  .note-menu-btn {
+    color: #9FD8CB;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  .journal-btn {
+    right: 38px;
+  }
+
+  .journal-back-btn {
+    position: absolute;
+    left: 0;
+    right: auto;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #9FD8CB;
+    padding: 10px 14px;
+  }
+
+  .journal-date-label {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #F2EFE9;
+    margin-bottom: 18px;
+  }
+
+  .journal-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 80px; /* keeps notes clear of the larger floating + button */
+  }
+
+  .journal-note-card {
+    background-color: #22343C;
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+  }
+
+  .journal-note-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #F2EFE9;
+    margin-bottom: 4px;
+  }
+
+  .journal-note-bottom-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .journal-note-preview {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    color: #C7D6D2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .journal-note-time {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: #6B7F87;
+  }
+
+  .fab-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-size: 1.9rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .note-title-input {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 8px 0 20px;
+    font-family: inherit;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #F2EFE9;
+  }
+
+  .note-title-input::placeholder {
+    color: #6B7F87;
+  }
+
+  .note-content-input {
+    display: block;
+    width: 100%;
+    min-height: 65vh;
+    background: none;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 0;
+    margin: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #F2EFE9;
+  }
+
+  .note-content-input::placeholder {
+    color: #6B7F87;
+  }
+
+  /* Small dot on calendar days that already have at least one journal note */
+  .calendar-day {
+    position: relative;
+  }
+
+  .calendar-day-dot {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #9FD8CB;
   }
 
   /* --- Date navigation bar --- */
@@ -785,6 +1028,16 @@
     background: none;
   }
 
+  .calendar-day.disabled-day {
+    color: #4A5A61;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .calendar-day.disabled-day:hover {
+    background: none;
+  }
+
   .empty-msg {
     text-align: center;
     color: #C7D6D2;
@@ -847,13 +1100,22 @@
     background-color: transparent;
     color: #C7D6D2;
   }
+
+  .note-save-btn {
+    display: block;
+    width: 100%;
+    padding: 16px 24px;
+    margin-top: 20px;
+    border-radius: 10px;
+  }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <div class="app-header">
+  <div class="app-header" id="mainAppHeader">
     <h1>Focus Timer</h1>
+    <button id="journalBtn" class="calendar-btn journal-btn" aria-label="Open journal">📓</button>
     <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
   </div>
 
@@ -904,7 +1166,50 @@
       <ul class="focus-subtasks-list" id="focusSubtasksList"></ul>
     </div>
   </div>
+
+  <!-- JOURNAL VIEW: date-based notes, opened from the Journal button -->
+  <div id="journalView" style="display: none;">
+    <div class="app-header">
+      <button id="journalBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1>Journal</h1>
+      <button id="journalCalendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
+    </div>
+    <div class="journal-date-label" id="journalDateLabel">Today</div>
+    <div class="journal-notes-list" id="journalNotesList"></div>
+  </div>
+
+  <!-- NOTE EDITOR VIEW: add or edit a single journal note -->
+  <div id="noteEditView" style="display: none;">
+    <div class="app-header">
+      <button id="noteBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1>Note</h1>
+      <button id="noteMenuBtn" class="calendar-btn note-menu-btn" style="display: none;" aria-label="Note options">⋮</button>
+    </div>
+    <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Title">
+    <textarea id="noteContentInput" class="note-content-input" placeholder="Write your note..."></textarea>
+  </div>
 </div>
+
+<!-- Small options menu for an existing note (three-dot menu) -->
+<div class="overlay" id="noteOptionsOverlay">
+  <div class="menu">
+    <button class="menu-btn danger" id="noteDeleteOptionBtn">🗑 Delete Note</button>
+    <button class="menu-btn cancel" id="noteOptionsCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Confirmation before permanently deleting a note -->
+<div class="overlay" id="noteDeleteOverlay">
+  <div class="menu">
+    <div class="menu-title">Delete this note?</div>
+    <div class="menu-subtext">This action can't be undone.</div>
+    <button class="menu-btn danger" id="noteDeleteConfirmBtn">Delete</button>
+    <button class="menu-btn cancel" id="noteDeleteCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Floating "+" button to add a new journal note - only shown on the Journal page -->
+<button id="addNoteFab" class="fab-btn" style="display: none;" aria-label="Add note">+</button>
 
 <!-- Popup menu shown when a task is tapped -->
 <div class="overlay" id="overlay">
@@ -952,17 +1257,26 @@
     <div id="editSubtaskInputsContainer"></div>
     <button type="button" class="add-subtask-btn" id="editAddSubtaskInputBtn">+ Add Subtask</button>
 
-    <label class="modal-label">Timer (minutes)</label>
-    <input type="number" id="editMinutesInput" class="modal-input" placeholder="" min="1">
+    <label class="modal-label">Timer</label>
+    <div id="editTimerSection">
+      <button type="button" class="add-timer-btn" id="editAddTimerBtn">+ Add a Timer</button>
 
-    <div class="quick-duration-row">
-      <button class="edit-quick-duration-btn" data-min="5">5 min</button>
-      <button class="edit-quick-duration-btn" data-min="10">10 min</button>
-      <button class="edit-quick-duration-btn" data-min="15">15 min</button>
-      <button class="edit-quick-duration-btn" data-min="25">25 min</button>
-      <button class="edit-quick-duration-btn" data-min="45">45 min</button>
-      <button class="edit-quick-duration-btn" data-min="60">60 min</button>
-      <button class="edit-quick-duration-btn" data-min="custom">Custom</button>
+      <div class="timer-set-row" id="editTimerSetRow" style="display: none;">
+        <button type="button" class="timer-value-btn" id="editTimerValueBtn">25 min</button>
+        <button type="button" class="timer-remove-btn" id="editTimerRemoveBtn">Remove</button>
+      </div>
+
+      <div class="timer-picker-block" id="editTimerPickerBlock" style="display: none;">
+        <div class="modal-label timer-picker-heading">Study Timer</div>
+        <div class="quick-duration-row">
+          <button type="button" class="edit-timer-picker-btn" data-min="25">25 min</button>
+          <button type="button" class="edit-timer-picker-btn" data-min="45">45 min</button>
+          <button type="button" class="edit-timer-picker-btn" data-min="60">60 min</button>
+          <button type="button" class="edit-timer-picker-btn" data-min="custom">Custom</button>
+        </div>
+        <input type="number" id="editMinutesInput" class="modal-input" placeholder="Enter minutes" min="1" style="display: none;">
+        <button type="button" class="menu-btn" id="editTimerCustomConfirmBtn" style="display: none;">Set Timer</button>
+      </div>
     </div>
 
     <label class="modal-label">Date</label>
@@ -1052,17 +1366,26 @@
     <div id="subtaskInputsContainer"></div>
     <button type="button" class="add-subtask-btn" id="addSubtaskInputBtn">+ Add Subtask</button>
 
-    <label class="modal-label">Timer (minutes)</label>
-    <input type="number" id="newTaskMinutesInput" class="modal-input" placeholder="" min="1">
+    <label class="modal-label">Timer</label>
+    <div id="timerSection">
+      <button type="button" class="add-timer-btn" id="addTimerBtn">+ Add a Timer</button>
 
-    <div class="quick-duration-row">
-      <button class="quick-duration-btn" data-min="5">5 min</button>
-      <button class="quick-duration-btn" data-min="10">10 min</button>
-      <button class="quick-duration-btn" data-min="15">15 min</button>
-      <button class="quick-duration-btn" data-min="25">25 min</button>
-      <button class="quick-duration-btn" data-min="45">45 min</button>
-      <button class="quick-duration-btn" data-min="60">60 min</button>
-      <button class="quick-duration-btn" data-min="custom">Custom</button>
+      <div class="timer-set-row" id="timerSetRow" style="display: none;">
+        <button type="button" class="timer-value-btn" id="timerValueBtn">25 min</button>
+        <button type="button" class="timer-remove-btn" id="timerRemoveBtn">Remove</button>
+      </div>
+
+      <div class="timer-picker-block" id="timerPickerBlock" style="display: none;">
+        <div class="modal-label timer-picker-heading">Study Timer</div>
+        <div class="quick-duration-row">
+          <button type="button" class="timer-picker-btn" data-min="25">25 min</button>
+          <button type="button" class="timer-picker-btn" data-min="45">45 min</button>
+          <button type="button" class="timer-picker-btn" data-min="60">60 min</button>
+          <button type="button" class="timer-picker-btn" data-min="custom">Custom</button>
+        </div>
+        <input type="number" id="newTaskMinutesInput" class="modal-input" placeholder="Enter minutes" min="1" style="display: none;">
+        <button type="button" class="menu-btn" id="timerCustomConfirmBtn" style="display: none;">Set Timer</button>
+      </div>
     </div>
 
     <label class="modal-label">Date</label>
@@ -1118,6 +1441,25 @@
   // ---- Element references ----
   const listView = document.getElementById('listView');
   const focusView = document.getElementById('focusView');
+  const mainAppHeader = document.getElementById('mainAppHeader');
+  const journalBtn = document.getElementById('journalBtn');
+  const journalView = document.getElementById('journalView');
+  const journalBackBtn = document.getElementById('journalBackBtn');
+  const journalCalendarBtn = document.getElementById('journalCalendarBtn');
+  const journalDateLabel = document.getElementById('journalDateLabel');
+  const journalNotesList = document.getElementById('journalNotesList');
+  const noteEditView = document.getElementById('noteEditView');
+  const noteBackBtn = document.getElementById('noteBackBtn');
+  const noteTitleInput = document.getElementById('noteTitleInput');
+  const noteContentInput = document.getElementById('noteContentInput');
+  const addNoteFab = document.getElementById('addNoteFab');
+  const noteMenuBtn = document.getElementById('noteMenuBtn');
+  const noteOptionsOverlay = document.getElementById('noteOptionsOverlay');
+  const noteDeleteOptionBtn = document.getElementById('noteDeleteOptionBtn');
+  const noteOptionsCancelBtn = document.getElementById('noteOptionsCancelBtn');
+  const noteDeleteOverlay = document.getElementById('noteDeleteOverlay');
+  const noteDeleteConfirmBtn = document.getElementById('noteDeleteConfirmBtn');
+  const noteDeleteCancelBtn = document.getElementById('noteDeleteCancelBtn');
   const focusName = document.getElementById('focusName');
   const focusDisplay = document.getElementById('focusDisplay');
   const focusPauseBtn = document.getElementById('focusPauseBtn');
@@ -1137,7 +1479,13 @@
   const addTaskOverlay = document.getElementById('addTaskOverlay');
   const newTaskNameInput = document.getElementById('newTaskNameInput');
   const newTaskMinutesInput = document.getElementById('newTaskMinutesInput');
-  const quickDurationBtns = document.querySelectorAll('.quick-duration-btn');
+  const addTimerBtn = document.getElementById('addTimerBtn');
+  const timerSetRow = document.getElementById('timerSetRow');
+  const timerValueBtn = document.getElementById('timerValueBtn');
+  const timerRemoveBtn = document.getElementById('timerRemoveBtn');
+  const timerPickerBlock = document.getElementById('timerPickerBlock');
+  const timerPickerBtns = document.querySelectorAll('.timer-picker-btn');
+  const timerCustomConfirmBtn = document.getElementById('timerCustomConfirmBtn');
   const subtaskInputsContainer = document.getElementById('subtaskInputsContainer');
   const addSubtaskInputBtn = document.getElementById('addSubtaskInputBtn');
   const focusSubtasksBlock = document.getElementById('focusSubtasksBlock');
@@ -1353,6 +1701,153 @@
     tasks = tasksByDate[selectedDateKey];
   }
 
+  // ---- Journal (date-based notes, separate from tasks) ----
+  let journalByDate = {};       // { "2026-09-13": [{id, title, content}, ...] }
+  let journalSelectedDateKey = todayKey();
+  let nextJournalId = 1;
+  let editingNoteId = null;     // which note is open in the editor (null = creating a new one)
+
+  function saveJournal() {
+    localStorage.setItem('oneTaskAtATime_journalByDate', JSON.stringify(journalByDate));
+    localStorage.setItem('oneTaskAtATime_nextJournalId', String(nextJournalId));
+  }
+
+  function loadJournal() {
+    try {
+      journalByDate = JSON.parse(localStorage.getItem('oneTaskAtATime_journalByDate')) || {};
+    } catch (e) {
+      journalByDate = {};
+    }
+    const savedNextId = localStorage.getItem('oneTaskAtATime_nextJournalId');
+    if (savedNextId) nextJournalId = Number(savedNextId);
+  }
+
+  function showJournalView() {
+    mainAppHeader.style.display = 'none';
+    listView.style.display = 'none';
+    focusView.style.display = 'none';
+    noteEditView.style.display = 'none';
+    journalView.style.display = 'block';
+    addNoteFab.style.display = 'flex';
+  }
+
+  function hideJournalView() {
+    journalView.style.display = 'none';
+    noteEditView.style.display = 'none';
+    addNoteFab.style.display = 'none';
+    mainAppHeader.style.display = 'flex';
+    listView.style.display = 'block';
+  }
+
+  function renderJournalView() {
+    const d = keyToDate(journalSelectedDateKey);
+    journalDateLabel.textContent = d.getDate() + ' ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getFullYear();
+
+    journalNotesList.innerHTML = '';
+    const notes = journalByDate[journalSelectedDateKey] || [];
+    if (notes.length === 0) {
+      journalNotesList.innerHTML = '<div class="empty-msg">No notes yet. Tap + to add one.</div>';
+      return;
+    }
+
+    notes.forEach((note) => {
+      const card = document.createElement('div');
+      card.className = 'journal-note-card';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'journal-note-title';
+      titleEl.textContent = note.title || '(Untitled)';
+
+      const bottomRow = document.createElement('div');
+      bottomRow.className = 'journal-note-bottom-row';
+
+      const previewEl = document.createElement('div');
+      previewEl.className = 'journal-note-preview';
+      // Collapse any blank lines/extra whitespace in the note so the card
+      // preview always stays compact - long gaps of blank lines in a
+      // note's content were making cards render unexpectedly tall.
+      const flatContent = note.content.replace(/\s+/g, ' ').trim();
+      previewEl.textContent = flatContent.length > 80 ? flatContent.slice(0, 80) + '...' : flatContent;
+      bottomRow.appendChild(previewEl);
+
+      // Only show a time if this note actually has one recorded -
+      // older notes saved before this feature existed simply show none.
+      if (note.savedAt) {
+        const timeEl = document.createElement('div');
+        timeEl.className = 'journal-note-time';
+        timeEl.textContent = new Date(note.savedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        bottomRow.appendChild(timeEl);
+      }
+
+      card.appendChild(titleEl);
+      card.appendChild(bottomRow);
+      card.addEventListener('click', () => openNoteEditor(note));
+      journalNotesList.appendChild(card);
+    });
+  }
+
+  function openNoteEditor(note) {
+    editingNoteId = note ? note.id : null;
+    noteTitleInput.value = note ? note.title : '';
+    noteContentInput.value = note ? note.content : '';
+    // The three-dot menu (with Delete Note) only makes sense for a note
+    // that's already saved - a brand-new, unsaved note has nothing to delete yet
+    noteMenuBtn.style.display = note ? 'block' : 'none';
+    journalView.style.display = 'none';
+    addNoteFab.style.display = 'none';
+    noteEditView.style.display = 'block';
+  }
+
+  function closeNoteEditor() {
+    noteEditView.style.display = 'none';
+    journalView.style.display = 'block';
+    addNoteFab.style.display = 'flex';
+  }
+
+  // ---- Note options menu (three-dot) and Delete Note ----
+  noteMenuBtn.addEventListener('click', () => {
+    noteOptionsOverlay.classList.add('open');
+  });
+
+  noteOptionsCancelBtn.addEventListener('click', () => {
+    noteOptionsOverlay.classList.remove('open');
+  });
+
+  noteOptionsOverlay.addEventListener('click', (e) => {
+    if (e.target === noteOptionsOverlay) noteOptionsOverlay.classList.remove('open');
+  });
+
+  noteDeleteOptionBtn.addEventListener('click', () => {
+    noteOptionsOverlay.classList.remove('open');
+    noteDeleteOverlay.classList.add('open');
+  });
+
+  noteDeleteCancelBtn.addEventListener('click', () => {
+    // Close the popup, note stays exactly as it was, editor remains open
+    noteDeleteOverlay.classList.remove('open');
+  });
+
+  noteDeleteOverlay.addEventListener('click', (e) => {
+    if (e.target === noteDeleteOverlay) noteDeleteOverlay.classList.remove('open');
+  });
+
+  noteDeleteConfirmBtn.addEventListener('click', () => {
+    noteDeleteOverlay.classList.remove('open');
+    const notesForDate = journalByDate[journalSelectedDateKey];
+    if (notesForDate && editingNoteId != null) {
+      const index = notesForDate.findIndex(n => n.id === editingNoteId);
+      if (index !== -1) notesForDate.splice(index, 1); // removes ONLY this note
+      saveJournal();
+    }
+    // Close the editor WITHOUT auto-saving (the note is gone, not being saved)
+    // and return to the Journal page - the calendar dot will naturally
+    // disappear on its own next time it's opened, since it's only ever
+    // drawn when a date's note list is non-empty.
+    editingNoteId = null;
+    closeNoteEditor();
+    renderJournalView();
+  });
+
   // ---- Tags ----
   const DEFAULT_TAGS = ['Personal', 'Work', 'Study', 'Health'];
   let customTags = [];
@@ -1382,7 +1877,9 @@
       btn.type = 'button';
       btn.className = 'tag-btn' + (tag === selectedTag ? ' selected' : '');
       btn.textContent = tag;
-      btn.addEventListener('click', () => onSelect(tag));
+      // Tapping the already-selected tag again removes it (toggle),
+      // tapping a different tag replaces the current selection.
+      btn.addEventListener('click', () => onSelect(tag === selectedTag ? null : tag));
       container.appendChild(btn);
     });
 
@@ -1490,6 +1987,7 @@
   // has already used some time (e.g. after a Break). Otherwise just shows
   // the plain total duration, same as before.
   function formatTaskDurationLabel(task) {
+    if (task.durationSeconds == null) return ''; // no-timer task - nothing to show
     const totalMin = Math.round(task.durationSeconds / 60);
     if (task.status === 'in-progress' && task.remainingSeconds < task.durationSeconds) {
       // Round UP so it never understates the time still needed
@@ -1543,8 +2041,14 @@
     focusView.style.display = 'block';
     calendarBtn.style.display = 'none'; // Calendar isn't accessible from Focus Mode
     if (!focusHistoryActive) {
-      history.pushState({ focusScreen: true }, '');
-      focusHistoryActive = true;
+      try {
+        history.pushState({ focusScreen: true }, '');
+        focusHistoryActive = true;
+      } catch (e) {
+        // Some sandboxed preview environments block history changes -
+        // the back-button trick just won't be available there, but the
+        // rest of Focus Mode must still work normally.
+      }
     }
   }
 
@@ -1556,7 +2060,9 @@
     // so Back presses on the list screen behave normally again.
     if (focusHistoryActive) {
       focusHistoryActive = false;
-      history.back();
+      try {
+        history.back();
+      } catch (e) { /* see note in showFocusView() */ }
     }
   }
 
@@ -1576,6 +2082,12 @@
     }
   });
 
+  // Tracks which tasks currently have their subtask preview expanded in the
+  // list view. Needed because renderTaskList() rebuilds everything from
+  // scratch, which would otherwise re-collapse a panel the moment a
+  // no-timer subtask checkbox is tapped (since render() runs on every tap).
+  const expandedSubtaskTaskIds = new Set();
+
   // Builds one task <li>, used by renderTaskList() for both sections
   function buildTaskListItem(task) {
     const li = document.createElement('li');
@@ -1584,17 +2096,23 @@
       (task.status === 'completed' ? ' completed' : '');
 
     const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+    const hasTimer = task.durationSeconds != null;
+    const durationLabel = hasTimer ? formatTaskDurationLabel(task) : '';
 
     li.innerHTML = `
       <span class="drag-handle">⋮⋮</span>
       <div class="task-content">
         <div class="task-top">
           <span class="task-name"></span>
+          <div class="task-top-right">
+            ${task.tag ? '<span class="task-tag-badge"></span>' : ''}
+            <span class="main-task-checkbox">${task.status === 'completed' ? '✓' : ''}</span>
+          </div>
         </div>
         <div class="task-bottom">
           ${hasSubtasks ? '<button class="subtasks-toggle-btn" type="button">Subtasks</button>' : ''}
           <span class="status ${task.status}"></span>
-          <span class="task-duration">${formatTaskDurationLabel(task)}</span>
+          ${durationLabel ? '<span class="task-duration"></span>' : ''}
         </div>
       </div>
     `;
@@ -1604,35 +2122,93 @@
     // Set text via textContent (safer than injecting into innerHTML directly)
     li.querySelector('.task-name').textContent = task.name;
     li.querySelector('.status').textContent = statusLabel(task.status);
+    if (task.tag) {
+      li.querySelector('.task-tag-badge').textContent = task.tag;
+    }
+    if (durationLabel) {
+      li.querySelector('.task-duration').textContent = durationLabel;
+    }
 
-    // Read-only subtasks preview, hidden until the "Subtasks" button is tapped
+    // Main completion checkbox - always present, works the same whether
+    // the task has a timer or not, and toggles both ways (tapping a Done
+    // task's checkbox un-checks it, fixing an accidental tap). If this
+    // task's timer happens to be actively running, stop it immediately
+    // rather than letting it tick on in the background after Done.
+    li.querySelector('.main-task-checkbox').addEventListener('click', (e) => {
+      e.stopPropagation(); // don't also open the task action menu
+      if (task.status !== 'completed') {
+        markComplete(task.id);
+      } else {
+        // Undo: if this task had actually made timer progress before being
+        // marked Done, restore it to In Progress with that same remaining
+        // time (not reset to the full duration, and not auto-started).
+        // A no-timer task, or a timed task that was never actually
+        // started, simply goes back to Not Started.
+        const hasPartialProgress = task.durationSeconds != null && task.remainingSeconds < task.durationSeconds;
+        task.status = hasPartialProgress ? 'in-progress' : 'not-started';
+        render();
+      }
+    });
+
+    // Read-only (or, for no-timer tasks, checkable) subtasks preview,
+    // hidden until the "Subtasks" button is tapped
     if (hasSubtasks) {
       const previewList = document.createElement('ul');
       previewList.className = 'task-subtasks-preview';
-      previewList.style.display = 'none';
+      const isExpanded = expandedSubtaskTaskIds.has(task.id);
+      previewList.style.display = isExpanded ? 'flex' : 'none';
       task.subtasks.forEach(sub => {
         const subLi = document.createElement('li');
         if (sub.completed) subLi.classList.add('completed');
         subLi.innerHTML = `<span class="preview-checkbox">${sub.completed ? '✓' : ''}</span><span class="subtask-preview-name"></span>`;
         subLi.querySelector('.subtask-preview-name').textContent = sub.name;
+
+        // Subtask checkboxes only actually toggle here for NO-TIMER tasks -
+        // timed tasks keep checking subtasks exclusively inside Focus Mode.
+        // Either way, tapping a subtask row must never fall through and
+        // open the parent task's menu (which is what was happening before).
+        if (!hasTimer) {
+          subLi.classList.add('clickable');
+          subLi.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sub.completed = !sub.completed;
+            render();
+          });
+        } else {
+          subLi.addEventListener('click', (e) => e.stopPropagation());
+        }
+
         previewList.appendChild(subLi);
       });
       li.querySelector('.task-content').appendChild(previewList);
 
       li.querySelector('.subtasks-toggle-btn').addEventListener('click', (e) => {
         e.stopPropagation(); // don't also open the task action menu
-        previewList.style.display = previewList.style.display === 'none' ? 'flex' : 'none';
+        if (expandedSubtaskTaskIds.has(task.id)) {
+          expandedSubtaskTaskIds.delete(task.id);
+          previewList.style.display = 'none';
+        } else {
+          expandedSubtaskTaskIds.add(task.id);
+          previewList.style.display = 'flex';
+        }
       });
     }
 
-    // Tapping the row opens the action menu - but not if the tap
-    // was on the drag handle or the Subtasks toggle
+    // Tapping the row opens the action menu - but not if the tap was on
+    // the drag handle, the Subtasks toggle, or the completion checkbox
     li.addEventListener('click', (e) => {
-      if (e.target.closest('.drag-handle') || e.target.closest('.subtasks-toggle-btn')) return;
+      if (e.target.closest('.drag-handle') || e.target.closest('.subtasks-toggle-btn') || e.target.closest('.main-task-checkbox')) return;
       openTaskMenu(task.id);
     });
 
-    makeDraggable(li);
+    // Done tasks must not be draggable at all - only Not Started / In
+    // Progress tasks can be reordered. The handle stays visible (dimmed)
+    // on Done tasks just to keep the row's layout/alignment consistent.
+    if (task.status === 'completed') {
+      li.querySelector('.drag-handle').classList.add('drag-handle-inactive');
+    } else {
+      makeDraggable(li);
+    }
     return li;
   }
 
@@ -1685,7 +2261,7 @@
 
   function statusLabel(status) {
     if (status === 'in-progress') return 'In Progress';
-    if (status === 'completed') return 'Completed';
+    if (status === 'completed') return 'Done';
     return 'Not Started';
   }
 
@@ -1743,6 +2319,7 @@
         // real task order, so it's kept next time we render.
         const newOrderIds = [...taskListEl.querySelectorAll('.task')].map(el => Number(el.dataset.id));
         tasks.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+        saveTasks(); // persist immediately - otherwise the new order is lost on refresh/reopen
       }
 
       // pointermove/up are attached to the handle itself (not document),
@@ -1764,11 +2341,17 @@
     renderTagRow(tagRow, newTaskTag, (tag) => { newTaskTag = tag; refreshAddTagRow(); });
   }
 
+  let newTaskHasTimer = false; // whether the task being created will have a timer at all
+
   function openAddTaskModal() {
     newTaskNameInput.value = '';
     newTaskMinutesInput.value = '';
-    quickDurationBtns.forEach(b => b.classList.remove('selected'));
     subtaskInputsContainer.innerHTML = ''; // start with no subtask fields
+
+    // Timer starts unset every time the modal opens fresh
+    newTaskHasTimer = false;
+    timerPickerBtns.forEach(b => b.classList.remove('selected'));
+    resetTimerSectionUI();
 
     applyRepeatRuleToUI({ type: 'none' }, repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
     newTaskTag = null;
@@ -1808,26 +2391,68 @@
     input.focus();
   });
 
-  quickDurationBtns.forEach((btn) => {
+  // ---- Optional timer (Add Task) ----
+  // Three states: no timer at all (just the "+ Add a Timer" button),
+  // the picker open (choosing 25/45/60/Custom), or a timer already set
+  // (collapsed "[X min]" pill with a way to change or remove it).
+  function resetTimerSectionUI() {
+    addTimerBtn.style.display = 'block';
+    timerSetRow.style.display = 'none';
+    timerPickerBlock.style.display = 'none';
+    newTaskMinutesInput.style.display = 'none';
+    timerCustomConfirmBtn.style.display = 'none';
+  }
+
+  function commitTimer(minutes) {
+    newTaskHasTimer = true;
+    newTaskMinutesInput.value = minutes;
+    timerValueBtn.textContent = minutes + ' min';
+    addTimerBtn.style.display = 'none';
+    timerPickerBlock.style.display = 'none';
+    timerSetRow.style.display = 'flex';
+  }
+
+  addTimerBtn.addEventListener('click', () => {
+    addTimerBtn.style.display = 'none';
+    timerPickerBlock.style.display = 'flex';
+  });
+
+  timerValueBtn.addEventListener('click', () => {
+    // Reopen the picker to change the already-set timer
+    timerSetRow.style.display = 'none';
+    timerPickerBlock.style.display = 'flex';
+  });
+
+  timerRemoveBtn.addEventListener('click', () => {
+    newTaskHasTimer = false;
+    newTaskMinutesInput.value = '';
+    timerPickerBtns.forEach(b => b.classList.remove('selected'));
+    resetTimerSectionUI();
+  });
+
+  timerPickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      quickDurationBtns.forEach(b => b.classList.remove('selected'));
+      timerPickerBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       if (btn.dataset.min === 'custom') {
         newTaskMinutesInput.value = '';
+        newTaskMinutesInput.style.display = 'block';
+        timerCustomConfirmBtn.style.display = 'block';
         newTaskMinutesInput.focus();
       } else {
-        newTaskMinutesInput.value = btn.dataset.min;
+        newTaskMinutesInput.style.display = 'none';
+        timerCustomConfirmBtn.style.display = 'none';
+        commitTimer(btn.dataset.min); // 25/45/60 apply immediately
       }
     });
   });
 
-  setupRepeatUI(repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
-
-  // Typing a custom value manually also clears any preset highlight
-  newTaskMinutesInput.addEventListener('input', () => {
-    const matchingPreset = [...quickDurationBtns].find(b => b.dataset.min === newTaskMinutesInput.value);
-    quickDurationBtns.forEach(b => b.classList.toggle('selected', b === matchingPreset));
+  timerCustomConfirmBtn.addEventListener('click', () => {
+    const minutes = parseFloat(newTaskMinutesInput.value);
+    if (minutes > 0) commitTimer(minutes);
   });
+
+  setupRepeatUI(repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
 
   dateOptToday.addEventListener('click', () => {
     newTaskDateKey = todayKey();
@@ -1854,8 +2479,7 @@
 
   addTaskConfirmBtn.addEventListener('click', () => {
     const name = newTaskNameInput.value.trim();
-    const minutes = parseFloat(newTaskMinutesInput.value);
-    if (!name || !minutes || minutes <= 0) return; // ignore invalid input
+    if (!name) return; // timer is optional now, but a name is still required
 
     // Each non-empty subtask input becomes one subtask, starting incomplete.
     // Subtasks only ever have a name - no separate timer, per spec.
@@ -1864,7 +2488,11 @@
       .filter(Boolean);
     const subtasks = subtaskNames.map((subName, i) => ({ id: i + 1, name: subName, completed: false }));
 
-    const seconds = Math.round(minutes * 60);
+    // No timer at all -> durationSeconds/remainingSeconds stay null, which
+    // is what marks this as a no-timer task everywhere else in the app.
+    const minutes = newTaskHasTimer ? parseFloat(newTaskMinutesInput.value) : null;
+    const seconds = (minutes && minutes > 0) ? Math.round(minutes * 60) : null;
+
     const repeatRule = readRepeatRule(repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
     const newTask = {
       id: nextId++,
@@ -1896,6 +2524,7 @@
   function startTask(id) {
     const task = tasks.find(t => t.id === id);
     if (!task || task.status === 'completed') return;
+    if (task.durationSeconds == null) return; // no-timer tasks never enter Focus Mode
 
     stopInterval(); // stop whatever was running before
     activeTaskId = id;
@@ -1958,11 +2587,20 @@
     if (!task) return;
     menuTaskId = id;
     menuTaskName.textContent = task.name;
-    // If this task has already been started before (even if paused
-    // or on a break), show "Continue" instead of "Start"
-    menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
-    // Reset only makes sense once a task has actually been started before
-    menuResetBtn.style.display = task.status === 'in-progress' ? 'block' : 'none';
+    const hasTimer = task.durationSeconds != null;
+    // Focus Mode only exists for timed tasks - hide Start/Continue and
+    // Reset entirely for no-timer tasks, which are managed from the list.
+    if (!hasTimer) {
+      menuStartBtn.style.display = 'none';
+      menuResetBtn.style.display = 'none';
+    } else {
+      menuStartBtn.style.display = 'block';
+      // If this task has already been started before (even if paused
+      // or on a break), show "Continue" instead of "Start"
+      menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
+      // Reset only makes sense once a task has actually been started before
+      menuResetBtn.style.display = task.status === 'in-progress' ? 'block' : 'none';
+    }
     overlay.classList.add('open');
   }
 
@@ -1972,8 +2610,9 @@
   }
 
   menuStartBtn.addEventListener('click', () => {
-    startTask(menuTaskId);
-    closeTaskMenu();
+    const idToStart = menuTaskId; // capture before closeTaskMenu() clears menuTaskId
+    closeTaskMenu(); // close first - never leave the menu stuck open, even if startTask() has trouble
+    startTask(idToStart);
   });
 
   menuEditBtn.addEventListener('click', () => {
@@ -2006,7 +2645,13 @@
   const editMinutesInput = document.getElementById('editMinutesInput');
   const editSubtaskInputsContainer = document.getElementById('editSubtaskInputsContainer');
   const editAddSubtaskInputBtn = document.getElementById('editAddSubtaskInputBtn');
-  const editQuickDurationBtns = document.querySelectorAll('.edit-quick-duration-btn');
+  const editAddTimerBtn = document.getElementById('editAddTimerBtn');
+  const editTimerSetRow = document.getElementById('editTimerSetRow');
+  const editTimerValueBtn = document.getElementById('editTimerValueBtn');
+  const editTimerRemoveBtn = document.getElementById('editTimerRemoveBtn');
+  const editTimerPickerBlock = document.getElementById('editTimerPickerBlock');
+  const editTimerPickerBtns = document.querySelectorAll('.edit-timer-picker-btn');
+  const editTimerCustomConfirmBtn = document.getElementById('editTimerCustomConfirmBtn');
   const editDateOptToday = document.getElementById('editDateOptToday');
   const editDateOptTomorrow = document.getElementById('editDateOptTomorrow');
   const editDateOptChoose = document.getElementById('editDateOptChoose');
@@ -2059,22 +2704,63 @@
     row.querySelector('input').focus();
   });
 
-  editQuickDurationBtns.forEach((btn) => {
+  let editTaskHasTimer = false; // whether the task being edited will have a timer at all
+
+  function resetEditTimerSectionUI() {
+    editAddTimerBtn.style.display = 'block';
+    editTimerSetRow.style.display = 'none';
+    editTimerPickerBlock.style.display = 'none';
+    editMinutesInput.style.display = 'none';
+    editTimerCustomConfirmBtn.style.display = 'none';
+  }
+
+  function commitEditTimer(minutes) {
+    editTaskHasTimer = true;
+    editMinutesInput.value = minutes;
+    editTimerValueBtn.textContent = minutes + ' min';
+    editAddTimerBtn.style.display = 'none';
+    editTimerPickerBlock.style.display = 'none';
+    editTimerSetRow.style.display = 'flex';
+  }
+
+  editAddTimerBtn.addEventListener('click', () => {
+    editAddTimerBtn.style.display = 'none';
+    editTimerPickerBlock.style.display = 'flex';
+  });
+
+  editTimerValueBtn.addEventListener('click', () => {
+    // Reopen the picker to change the already-set timer
+    editTimerSetRow.style.display = 'none';
+    editTimerPickerBlock.style.display = 'flex';
+  });
+
+  editTimerRemoveBtn.addEventListener('click', () => {
+    editTaskHasTimer = false;
+    editMinutesInput.value = '';
+    editTimerPickerBtns.forEach(b => b.classList.remove('selected'));
+    resetEditTimerSectionUI();
+  });
+
+  editTimerPickerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      editQuickDurationBtns.forEach(b => b.classList.remove('selected'));
+      editTimerPickerBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       if (btn.dataset.min === 'custom') {
         editMinutesInput.value = '';
+        editMinutesInput.style.display = 'block';
+        editTimerCustomConfirmBtn.style.display = 'block';
         editMinutesInput.focus();
       } else {
-        editMinutesInput.value = btn.dataset.min;
+        editMinutesInput.style.display = 'none';
+        editTimerCustomConfirmBtn.style.display = 'none';
+        commitEditTimer(btn.dataset.min); // 25/45/60 apply immediately
       }
     });
   });
 
-  editMinutesInput.addEventListener('input', () => {
-    const matchingPreset = [...editQuickDurationBtns].find(b => b.dataset.min === editMinutesInput.value);
-    editQuickDurationBtns.forEach(b => b.classList.toggle('selected', b === matchingPreset));
+  editTimerCustomConfirmBtn.addEventListener('click', () => {
+    const minutes = parseFloat(editMinutesInput.value);
+    if (minutes > 0) commitEditTimer(minutes);
   });
 
   function updateEditDateOptionHighlight() {
@@ -2109,9 +2795,21 @@
     editTaskDateKey = selectedDateKey; // the task currently lives on whichever date is being viewed
 
     editNameInput.value = task.name;
-    const currentMinutes = Math.round(task.durationSeconds / 60);
-    editMinutesInput.value = currentMinutes;
-    editQuickDurationBtns.forEach(b => b.classList.toggle('selected', b.dataset.min === String(currentMinutes)));
+    editTimerPickerBtns.forEach(b => b.classList.remove('selected'));
+    if (task.durationSeconds != null) {
+      editTaskHasTimer = true;
+      const currentMinutes = Math.round(task.durationSeconds / 60);
+      editMinutesInput.value = currentMinutes;
+      editTimerValueBtn.textContent = currentMinutes + ' min';
+      editTimerPickerBtns.forEach(b => b.classList.toggle('selected', b.dataset.min === String(currentMinutes)));
+      editAddTimerBtn.style.display = 'none';
+      editTimerPickerBlock.style.display = 'none';
+      editTimerSetRow.style.display = 'flex';
+    } else {
+      editTaskHasTimer = false;
+      editMinutesInput.value = '';
+      resetEditTimerSectionUI();
+    }
 
     editSubtaskInputsContainer.innerHTML = '';
     (task.subtasks || []).forEach(sub => addEditSubtaskRow(sub));
@@ -2135,15 +2833,30 @@
     if (!task) { closeEditModal(); return; }
 
     const newName = editNameInput.value.trim();
-    const minutesNum = parseFloat(editMinutesInput.value);
 
     if (newName) task.name = newName;
-    if (minutesNum > 0) {
-      task.durationSeconds = Math.round(minutesNum * 60);
-      // Only reset remaining time if this task isn't currently running
-      if (task.id !== activeTaskId || task.status !== 'in-progress') {
-        task.remainingSeconds = task.durationSeconds;
+
+    if (editTaskHasTimer) {
+      const minutesNum = parseFloat(editMinutesInput.value);
+      if (minutesNum > 0) {
+        task.durationSeconds = Math.round(minutesNum * 60);
+        // Only reset remaining time if this task isn't currently running
+        if (task.id !== activeTaskId || task.status !== 'in-progress') {
+          task.remainingSeconds = task.durationSeconds;
+        }
       }
+    } else {
+      // Timer was removed entirely - this becomes a no-timer task.
+      // If it somehow was the active/running task, stop it first.
+      if (task.id === activeTaskId) {
+        stopInterval();
+        activeTaskId = null;
+        clearActiveNotification();
+      }
+      task.durationSeconds = null;
+      task.remainingSeconds = null;
+      // A no-timer task can only ever be "Not Started" or "Done"
+      if (task.status === 'in-progress') task.status = 'not-started';
     }
 
     // Rebuild subtasks from whatever rows are still present - existing
@@ -2224,7 +2937,13 @@
   function markComplete(id) {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
-    if (task.id === activeTaskId) stopInterval();
+    // If this task's timer happens to be actively running, stop it
+    // completely rather than leaving it ticking in the background.
+    if (task.id === activeTaskId) {
+      stopInterval();
+      activeTaskId = null;
+      clearActiveNotification();
+    }
     task.status = 'completed';
     render();
   }
@@ -2244,48 +2963,62 @@
   }
 
   // ---- Android notifications (via the service worker) ----
+  // Every function here is wrapped in try/catch: notifications are a
+  // nice-to-have, and some environments (sandboxed previews, browsers
+  // without notification support, restricted permissions policies, etc.)
+  // can throw all sorts of different errors here. None of that should
+  // ever be allowed to break Focus Mode or any other core functionality.
+
   // Ask for permission the first time a task is started
   function ensureNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    try {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    } catch (e) { /* notifications unsupported/blocked here - ignore */ }
   }
 
   // Shows/updates the ongoing "timer is running" notification.
   // Re-uses the same tag so it replaces itself instead of stacking up.
   function updateActiveNotification(task, paused) {
-    if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification('One Task', {
-        body: task.name + ' - ' + (paused ? 'Paused - ' : '') + formatTimeHMS(task.remainingSeconds) + ' remaining',
-        tag: 'active-timer',
-        renotify: false,
-        silent: true,
-        requireInteraction: true,
-        icon: 'icon-192.png',
-        badge: 'icon-192.png',
-        actions: paused ? [] : [{ action: 'pause', title: 'Pause' }]
-      });
-    });
+    try {
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification('One Task', {
+          body: task.name + ' - ' + (paused ? 'Paused - ' : '') + formatTimeHMS(task.remainingSeconds) + ' remaining',
+          tag: 'active-timer',
+          renotify: false,
+          silent: true,
+          requireInteraction: true,
+          icon: 'icon-192.png',
+          badge: 'icon-192.png',
+          actions: paused ? [] : [{ action: 'pause', title: 'Pause' }]
+        });
+      }).catch(() => {});
+    } catch (e) { /* notifications unsupported/blocked here - ignore */ }
   }
 
   function clearActiveNotification() {
-    if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.getNotifications({ tag: 'active-timer' }).then((notifs) => notifs.forEach((n) => n.close()));
-    });
+    try {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.getNotifications({ tag: 'active-timer' }).then((notifs) => notifs.forEach((n) => n.close()));
+      }).catch(() => {});
+    } catch (e) { /* notifications unsupported/blocked here - ignore */ }
   }
 
   function showCompletionNotification(task) {
-    if (!('serviceWorker' in navigator) || Notification.permission !== 'granted') return;
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification('One Task', {
-        body: "Time's up! " + task.name,
-        tag: 'timer-done',
-        icon: 'icon-192.png',
-        badge: 'icon-192.png'
-      });
-    });
+    try {
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification('One Task', {
+          body: "Time's up! " + task.name,
+          tag: 'timer-done',
+          icon: 'icon-192.png',
+          badge: 'icon-192.png'
+        });
+      }).catch(() => {});
+    } catch (e) { /* notifications unsupported/blocked here - ignore */ }
   }
 
   // Listen for the Pause action pressed from inside the notification itself
@@ -2434,6 +3167,7 @@
     let baseKey = selectedDateKey;
     if (calendarPurpose === 'pickForAddTask') baseKey = newTaskDateKey;
     if (calendarPurpose === 'pickForEditTask') baseKey = editTaskDateKey;
+    if (calendarPurpose === 'pickForJournal') baseKey = journalSelectedDateKey;
     const d = keyToDate(baseKey);
     calViewYear = d.getFullYear();
     calViewMonth = d.getMonth();
@@ -2451,6 +3185,10 @@
     } else if (calendarPurpose === 'pickForEditTask') {
       calendarPurpose = 'navigate';
       editOverlay.classList.add('open');
+    } else if (calendarPurpose === 'pickForJournal') {
+      // Journal stays visible underneath the calendar overlay the whole
+      // time, so there's nothing to reopen - just reset the mode.
+      calendarPurpose = 'navigate';
     }
   }
 
@@ -2464,6 +3202,7 @@
     let highlightKey = selectedDateKey;
     if (calendarPurpose === 'pickForAddTask') highlightKey = newTaskDateKey;
     if (calendarPurpose === 'pickForEditTask') highlightKey = editTaskDateKey;
+    if (calendarPurpose === 'pickForJournal') highlightKey = journalSelectedDateKey;
 
     // Blank filler cells so day 1 lines up under the correct weekday
     for (let i = 0; i < startWeekday; i++) {
@@ -2479,7 +3218,25 @@
       if (key === todayKey()) btn.classList.add('today');
       if (key === highlightKey) btn.classList.add('selected');
       btn.textContent = day;
+
+      // The Journal is for today's entry and reading past entries only -
+      // future dates stay visible but can't be selected.
+      const isDisabledFutureJournalDay = calendarPurpose === 'pickForJournal' && key > todayKey();
+      if (isDisabledFutureJournalDay) {
+        btn.classList.add('disabled-day');
+        btn.disabled = true;
+      }
+
+      // Small dot for dates with at least one journal note - only shown
+      // while browsing the calendar from the Journal page
+      if (calendarPurpose === 'pickForJournal' && journalByDate[key] && journalByDate[key].length > 0) {
+        const dot = document.createElement('span');
+        dot.className = 'calendar-day-dot';
+        btn.appendChild(dot);
+      }
+
       btn.addEventListener('click', () => {
+        if (isDisabledFutureJournalDay) return;
         if (calendarPurpose === 'pickForAddTask') {
           newTaskDateKey = key;
           calendarPurpose = 'navigate';
@@ -2492,12 +3249,30 @@
           calendarOverlay.classList.remove('open');
           editOverlay.classList.add('open');
           updateEditDateOptionHighlight();
+        } else if (calendarPurpose === 'pickForJournal') {
+          journalSelectedDateKey = key;
+          calendarPurpose = 'navigate';
+          calendarOverlay.classList.remove('open');
+          renderJournalView();
         } else {
           switchToDate(key);
           calendarOverlay.classList.remove('open');
         }
       });
       calendarGrid.appendChild(btn);
+    }
+
+    // Block navigating to a month that would be entirely in the future
+    // when browsing the calendar from the Journal.
+    if (calendarPurpose === 'pickForJournal') {
+      const now = new Date();
+      const viewingCurrentOrLaterMonth = (calViewYear > now.getFullYear()) ||
+        (calViewYear === now.getFullYear() && calViewMonth >= now.getMonth());
+      calNextMonthBtn.disabled = viewingCurrentOrLaterMonth;
+      calNextMonthBtn.style.opacity = viewingCurrentOrLaterMonth ? '0.3' : '1';
+    } else {
+      calNextMonthBtn.disabled = false;
+      calNextMonthBtn.style.opacity = '1';
     }
   }
 
@@ -2517,8 +3292,48 @@
     renderCalendar();
   });
 
+  // ---- Journal button wiring ----
+  journalBtn.addEventListener('click', () => {
+    journalSelectedDateKey = todayKey(); // Journal always opens on Today from the Homepage
+    showJournalView();
+    renderJournalView();
+  });
+
+  journalBackBtn.addEventListener('click', hideJournalView);
+  journalCalendarBtn.addEventListener('click', () => {
+    calendarPurpose = 'pickForJournal';
+    openCalendar();
+  });
+
+  addNoteFab.addEventListener('click', () => openNoteEditor(null));
+
+  // Back now auto-saves the note before leaving - there's no separate
+  // Save button anymore, so nothing typed is ever accidentally lost.
+  noteBackBtn.addEventListener('click', () => {
+    const title = noteTitleInput.value.trim();
+    const content = noteContentInput.value.trim();
+
+    if (!title && !content) {
+      closeNoteEditor(); // nothing was written - nothing to save
+      return;
+    }
+
+    if (!journalByDate[journalSelectedDateKey]) journalByDate[journalSelectedDateKey] = [];
+    const now = Date.now();
+    if (editingNoteId) {
+      const note = journalByDate[journalSelectedDateKey].find(n => n.id === editingNoteId);
+      if (note) { note.title = title; note.content = content; note.savedAt = now; }
+    } else {
+      journalByDate[journalSelectedDateKey].push({ id: nextJournalId++, title, content, savedAt: now });
+    }
+    saveJournal();
+    closeNoteEditor();
+    renderJournalView();
+  });
+
   // First render (loads anything saved from before, then draws it)
   loadTasks();
+  loadJournal();
   render();
   updateDateBar();
 
