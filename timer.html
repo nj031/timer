@@ -117,6 +117,137 @@
     margin-top: 4px;
   }
 
+  /* --- Subtasks (Focus Mode - interactive) --- */
+  .focus-subtasks {
+    margin-top: 18px;
+    text-align: left;
+  }
+
+  .focus-subtasks-title {
+    font-size: 0.8rem;
+    color: #C7D6D2;
+    margin-bottom: 6px;
+  }
+
+  .focus-subtasks-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .focus-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .focus-subtask-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #9FD8CB;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #1B2A32;
+  }
+
+  .focus-subtask-item.completed .focus-subtask-checkbox {
+    background-color: #9FD8CB;
+  }
+
+  .focus-subtask-item.completed .focus-subtask-name {
+    text-decoration: line-through;
+    color: #C7D6D2;
+  }
+
+  .focus-subtask-name {
+    font-size: 0.9rem;
+    color: #F2EFE9;
+  }
+
+  /* --- Subtasks (Task List - read-only preview) --- */
+  .subtasks-toggle-btn {
+    background: none;
+    border: none;
+    color: #9FD8CB;
+    font-size: 0.78rem;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .task-subtasks-preview {
+    list-style: none;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-subtasks-preview li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #C7D6D2;
+  }
+
+  .task-subtasks-preview .preview-checkbox {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid #6B7F87;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+  }
+
+  .task-subtasks-preview li.completed .preview-checkbox {
+    background-color: #6B7F87;
+    color: #22343C;
+  }
+
+  .task-subtasks-preview li.completed .subtask-preview-name {
+    text-decoration: line-through;
+  }
+
+  /* --- Task list section headers --- */
+  .task-section-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #9FD8CB;
+    margin: 14px 0 8px;
+  }
+
+  .task-section-header:first-child {
+    margin-top: 0;
+  }
+
+  /* --- Add Task modal: subtask inputs --- */
+  .subtask-input-row {
+    margin-bottom: 6px;
+  }
+
+  .add-subtask-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+
   /* --- Break confirmation modal subtext --- */
   .menu-subtext {
     font-size: 0.85rem;
@@ -308,8 +439,8 @@
 
   .task-bottom {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
   }
 
   .status {
@@ -568,9 +699,6 @@
 
   <!-- FOCUS VIEW: shown only while a task is actively selected -->
   <div id="focusView" class="now-playing" style="display: none;">
-    <div class="focus-status">In Progress</div>
-    <div id="focusName">Task name</div>
-
     <div class="ring-wrap">
       <svg viewBox="0 0 200 200" class="ring-svg">
         <circle class="ring-track" cx="100" cy="100" r="90" transform="rotate(-90 100 100)"></circle>
@@ -587,6 +715,14 @@
       <button id="focusPauseBtn">Pause</button>
       <button id="focusResetBtn">Reset</button>
       <button id="focusBreakBtn">Break</button>
+    </div>
+
+    <div class="focus-status">In Progress</div>
+    <div id="focusName">Task name</div>
+
+    <div class="focus-subtasks" id="focusSubtasksBlock" style="display: none;">
+      <div class="focus-subtasks-title">Subtasks</div>
+      <ul class="focus-subtasks-list" id="focusSubtasksList"></ul>
     </div>
   </div>
 </div>
@@ -659,6 +795,10 @@
     <label class="modal-label">Task name</label>
     <input type="text" id="newTaskNameInput" class="modal-input" placeholder="">
 
+    <label class="modal-label">Subtasks</label>
+    <div id="subtaskInputsContainer"></div>
+    <button type="button" class="add-subtask-btn" id="addSubtaskInputBtn">+ Add Subtask</button>
+
     <label class="modal-label">Timer (minutes)</label>
     <input type="number" id="newTaskMinutesInput" class="modal-input" placeholder="" min="1">
 
@@ -705,6 +845,10 @@
   const newTaskNameInput = document.getElementById('newTaskNameInput');
   const newTaskMinutesInput = document.getElementById('newTaskMinutesInput');
   const quickDurationBtns = document.querySelectorAll('.quick-duration-btn');
+  const subtaskInputsContainer = document.getElementById('subtaskInputsContainer');
+  const addSubtaskInputBtn = document.getElementById('addSubtaskInputBtn');
+  const focusSubtasksBlock = document.getElementById('focusSubtasksBlock');
+  const focusSubtasksList = document.getElementById('focusSubtasksList');
   const dateOptToday = document.getElementById('dateOptToday');
   const dateOptTomorrow = document.getElementById('dateOptTomorrow');
   const dateOptChoose = document.getElementById('dateOptChoose');
@@ -926,9 +1070,70 @@
     }
   });
 
-  // Rebuilds the whole task list from scratch. Only call this when the
-  // list itself actually changes (add/delete/edit/status/reorder) -
-  // NOT on every timer tick, since that would wipe out an in-progress drag.
+  // Builds one task <li>, used by renderTaskList() for both sections
+  function buildTaskListItem(task) {
+    const li = document.createElement('li');
+    li.className = 'task' +
+      (task.id === activeTaskId ? ' active' : '') +
+      (task.status === 'completed' ? ' completed' : '');
+
+    const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
+
+    li.innerHTML = `
+      <span class="drag-handle">⋮⋮</span>
+      <div class="task-content">
+        <div class="task-top">
+          <span class="task-name"></span>
+        </div>
+        <div class="task-bottom">
+          ${hasSubtasks ? '<button class="subtasks-toggle-btn" type="button">Subtasks</button>' : ''}
+          <span class="status ${task.status}"></span>
+          <span class="task-duration">${formatTaskDurationLabel(task)}</span>
+        </div>
+      </div>
+    `;
+    li.dataset.id = task.id;
+    li.dataset.group = task.status === 'completed' ? 'done' : 'active';
+
+    // Set text via textContent (safer than injecting into innerHTML directly)
+    li.querySelector('.task-name').textContent = task.name;
+    li.querySelector('.status').textContent = statusLabel(task.status);
+
+    // Read-only subtasks preview, hidden until the "Subtasks" button is tapped
+    if (hasSubtasks) {
+      const previewList = document.createElement('ul');
+      previewList.className = 'task-subtasks-preview';
+      previewList.style.display = 'none';
+      task.subtasks.forEach(sub => {
+        const subLi = document.createElement('li');
+        if (sub.completed) subLi.classList.add('completed');
+        subLi.innerHTML = `<span class="preview-checkbox">${sub.completed ? '✓' : ''}</span><span class="subtask-preview-name"></span>`;
+        subLi.querySelector('.subtask-preview-name').textContent = sub.name;
+        previewList.appendChild(subLi);
+      });
+      li.querySelector('.task-content').appendChild(previewList);
+
+      li.querySelector('.subtasks-toggle-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); // don't also open the task action menu
+        previewList.style.display = previewList.style.display === 'none' ? 'flex' : 'none';
+      });
+    }
+
+    // Tapping the row opens the action menu - but not if the tap
+    // was on the drag handle or the Subtasks toggle
+    li.addEventListener('click', (e) => {
+      if (e.target.closest('.drag-handle') || e.target.closest('.subtasks-toggle-btn')) return;
+      openTaskMenu(task.id);
+    });
+
+    makeDraggable(li);
+    return li;
+  }
+
+  // Rebuilds the whole task list from scratch, grouped into "In Progress"
+  // and "Done" sections. Only call this when the list itself actually
+  // changes (add/delete/edit/status/reorder) - NOT on every timer tick,
+  // since that would wipe out an in-progress drag.
   function renderTaskList() {
     taskListEl.innerHTML = '';
     if (tasks.length === 0) {
@@ -936,41 +1141,26 @@
       return;
     }
 
-    tasks.forEach(task => {
-      const li = document.createElement('li');
-      li.className = 'task' +
-        (task.id === activeTaskId ? ' active' : '') +
-        (task.status === 'completed' ? ' completed' : '');
+    const inProgressTasks = tasks.filter(t => t.status !== 'completed');
+    const doneTasks = tasks.filter(t => t.status === 'completed');
 
-      li.innerHTML = `
-        <span class="drag-handle">⋮⋮</span>
-        <div class="task-content">
-          <div class="task-top">
-            <span class="task-name"></span>
-            <span class="task-duration">${formatTaskDurationLabel(task)}</span>
-          </div>
-          <div class="task-bottom">
-            <span class="status ${task.status}"></span>
-          </div>
-        </div>
-      `;
-      li.dataset.id = task.id;
+    if (inProgressTasks.length > 0) {
+      const header = document.createElement('li');
+      header.className = 'task-section-header';
+      header.dataset.group = 'active';
+      header.textContent = 'In Progress';
+      taskListEl.appendChild(header);
+      inProgressTasks.forEach(task => taskListEl.appendChild(buildTaskListItem(task)));
+    }
 
-      // Set text via textContent (safer than injecting into innerHTML directly)
-      li.querySelector('.task-name').textContent = task.name;
-      li.querySelector('.status').textContent = statusLabel(task.status);
-
-      // Tapping the row opens the action menu - but not if the tap
-      // was on the drag handle (that's reserved for reordering)
-      li.addEventListener('click', (e) => {
-        if (e.target.closest('.drag-handle')) return;
-        openTaskMenu(task.id);
-      });
-
-      makeDraggable(li);
-
-      taskListEl.appendChild(li);
-    });
+    if (doneTasks.length > 0) {
+      const header = document.createElement('li');
+      header.className = 'task-section-header';
+      header.dataset.group = 'done';
+      header.textContent = 'Done';
+      taskListEl.appendChild(header);
+      doneTasks.forEach(task => taskListEl.appendChild(buildTaskListItem(task)));
+    }
   }
 
   function updateProgressLabel() {
@@ -1007,9 +1197,11 @@
         // Stop the page/browser from trying to scroll while dragging
         moveEvent.preventDefault();
 
-        // Look at every other task row and find the first one whose
-        // vertical middle is below the pointer - we'll drop just above it.
-        const siblings = [...taskListEl.querySelectorAll('.task')].filter(el => el !== li);
+        // Look at every other task row IN THE SAME SECTION and find the
+        // first one whose vertical middle is below the pointer - we'll
+        // drop just above it. Restricting to the same group (In Progress
+        // vs Done) stops a drag from crossing between the two sections.
+        const siblings = [...taskListEl.querySelectorAll('.task[data-group="' + li.dataset.group + '"]')].filter(el => el !== li);
         const y = moveEvent.clientY;
 
         let nextSibling = null;
@@ -1024,6 +1216,12 @@
 
         if (nextSibling) {
           taskListEl.insertBefore(li, nextSibling);
+        } else if (li.dataset.group === 'active') {
+          // Dropping past the last "In Progress" row - stop at the "Done"
+          // header instead of overshooting into the Done section itself
+          const doneHeader = taskListEl.querySelector('.task-section-header[data-group="done"]');
+          if (doneHeader) taskListEl.insertBefore(li, doneHeader);
+          else taskListEl.appendChild(li);
         } else {
           taskListEl.appendChild(li);
         }
@@ -1058,6 +1256,7 @@
     newTaskNameInput.value = '';
     newTaskMinutesInput.value = '';
     quickDurationBtns.forEach(b => b.classList.remove('selected'));
+    subtaskInputsContainer.innerHTML = ''; // start with no subtask fields
 
     // Default the date to whichever date is currently being viewed
     newTaskDateKey = selectedDateKey;
@@ -1077,6 +1276,20 @@
     const label = formatDateLabel(newTaskDateKey);
     chosenDatePreview.textContent = 'Task will be added to: ' + label.sub;
   }
+
+  // Each click adds one more subtask name field, stacked above the button.
+  // No limit on how many can be added.
+  addSubtaskInputBtn.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'subtask-input-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'modal-input subtask-input';
+    input.placeholder = 'Subtask name';
+    row.appendChild(input);
+    subtaskInputsContainer.appendChild(row);
+    input.focus();
+  });
 
   quickDurationBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1125,13 +1338,21 @@
     const minutes = parseFloat(newTaskMinutesInput.value);
     if (!name || !minutes || minutes <= 0) return; // ignore invalid input
 
+    // Each non-empty subtask input becomes one subtask, starting incomplete.
+    // Subtasks only ever have a name - no separate timer, per spec.
+    const subtaskNames = [...subtaskInputsContainer.querySelectorAll('.subtask-input')]
+      .map(input => input.value.trim())
+      .filter(Boolean);
+    const subtasks = subtaskNames.map((subName, i) => ({ id: i + 1, name: subName, completed: false }));
+
     const seconds = Math.round(minutes * 60);
     const newTask = {
       id: nextId++,
       name: name,
       durationSeconds: seconds,
       remainingSeconds: seconds,
-      status: 'not-started'
+      status: 'not-started',
+      subtasks: subtasks
     };
 
     if (!tasksByDate[newTaskDateKey]) tasksByDate[newTaskDateKey] = [];
@@ -1159,9 +1380,41 @@
     }
     render();
     showFocusView();
+    renderFocusSubtasks(task);
     runInterval();
     ensureNotificationPermission();
     updateActiveNotification(task, false);
+  }
+
+  // Builds the interactive subtask checklist shown in Focus Mode.
+  // Only called when entering Focus Mode (not every timer tick), since
+  // subtask state doesn't change on its own.
+  function renderFocusSubtasks(task) {
+    const subtasks = task.subtasks || [];
+    if (subtasks.length === 0) {
+      focusSubtasksBlock.style.display = 'none';
+      return;
+    }
+    focusSubtasksBlock.style.display = 'block';
+    focusSubtasksList.innerHTML = '';
+
+    subtasks.forEach((sub) => {
+      const li = document.createElement('li');
+      li.className = 'focus-subtask-item' + (sub.completed ? ' completed' : '');
+      li.innerHTML = `<span class="focus-subtask-checkbox">${sub.completed ? '✓' : ''}</span><span class="focus-subtask-name"></span>`;
+      li.querySelector('.focus-subtask-name').textContent = sub.name;
+
+      // Tapping a subtask in Focus Mode toggles it complete/incomplete.
+      // This is the ONLY place subtasks can be checked - the read-only
+      // preview in the task list is not clickable.
+      li.addEventListener('click', () => {
+        sub.completed = !sub.completed;
+        saveTasks();
+        renderFocusSubtasks(task); // redraw just the checklist, not the whole screen
+      });
+
+      focusSubtasksList.appendChild(li);
+    });
   }
 
   // ---- Popup menu logic ----
