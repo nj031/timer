@@ -7,6 +7,10 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1B2A32">
 <link rel="apple-touch-icon" href="icon-192.png">
+<!-- Firebase (Authentication + Firestore) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1108,13 +1112,142 @@
     margin-top: 20px;
     border-radius: 10px;
   }
+
+  /* --- Login Screen --- */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background-color: #1B2A32;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 999;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+    background-color: #22343C;
+    border-radius: 16px;
+    padding: 28px 24px;
+  }
+
+  .login-box h1 {
+    font-size: 1.4rem;
+    color: #9FD8CB;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .login-box .login-sub {
+    font-size: 0.85rem;
+    color: #8AA0A8;
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .login-input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #3A4C55;
+    background-color: #1B2A32;
+    color: #F2EFE9;
+    font-size: 0.95rem;
+  }
+
+  .login-input::placeholder { color: #6E848C; }
+
+  .login-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .login-btn-primary {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+  }
+
+  .login-btn-secondary {
+    background-color: transparent;
+    color: #9FD8CB;
+    border: 1px solid #3A4C55;
+  }
+
+  .login-btn-google {
+    background-color: #F2EFE9;
+    color: #1B2A32;
+  }
+
+  .login-divider {
+    text-align: center;
+    color: #6E848C;
+    font-size: 0.8rem;
+    margin: 14px 0;
+  }
+
+  #loginError {
+    color: #E08A8A;
+    font-size: 0.83rem;
+    text-align: center;
+    min-height: 1.2em;
+    margin-bottom: 8px;
+  }
+
+  #loginLoading {
+    text-align: center;
+    color: #9FD8CB;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    display: none;
+  }
+
+  .logout-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #F2EFE9;
+    padding: 4px 8px;
+  }
 </style>
 </head>
 <body>
 
-<div class="app">
+<!-- LOGIN SCREEN: shown until the user is signed in -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>One Task</h1>
+    <div class="login-sub">Sign in to keep your tasks safe</div>
+
+    <div id="loginError"></div>
+
+    <input type="email" id="loginEmail" class="login-input" placeholder="Email" autocomplete="email">
+    <input type="password" id="loginPassword" class="login-input" placeholder="Password" autocomplete="current-password">
+
+    <button id="loginSubmitBtn" class="login-btn login-btn-primary">Log In</button>
+    <button id="signupSubmitBtn" class="login-btn login-btn-secondary">Create Account</button>
+
+    <div class="login-divider">— or —</div>
+
+    <button id="googleSignInBtn" class="login-btn login-btn-google">Continue with Google</button>
+
+    <div id="loginLoading">Loading your tasks…</div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
   <div class="app-header" id="mainAppHeader">
     <h1>Focus Timer</h1>
+    <button id="logoutBtn" class="logout-btn" aria-label="Log out">🚪</button>
     <button id="journalBtn" class="calendar-btn journal-btn" aria-label="Open journal">📓</button>
     <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
   </div>
@@ -1439,10 +1572,45 @@
 </div>
 
 <script>
+  // ---- Firebase (Auth + Cloud Sync) ----
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxsmsLhuMeLN-qvKId5f8uqrCYaDjBDbM",
+    authDomain: "one-task-at-a-time-299f3.firebaseapp.com",
+    projectId: "one-task-at-a-time-299f3",
+    storageBucket: "one-task-at-a-time-299f3.firebasestorage.app",
+    messagingSenderId: "59401669520",
+    appId: "1:59401669520:web:06843300e58bf7d88c0115"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUid = null;
+  let cloudSyncTimer = null;
+
+  // Debounced push of all app data up to this user's cloud document.
+  // Called after every local save so changes eventually reach the cloud
+  // without hammering Firestore on every keystroke/tick.
+  function scheduleCloudSync() {
+    if (!currentUid) return;
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+      db.collection('users').doc(currentUid).set({
+        tasksByDate,
+        nextId,
+        journalByDate,
+        nextJournalId,
+        customTags,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch((e) => console.error('Cloud sync failed:', e));
+    }, 1200);
+  }
+
   // ---- Element references ----
   const listView = document.getElementById('listView');
   const focusView = document.getElementById('focusView');
   const mainAppHeader = document.getElementById('mainAppHeader');
+  const logoutBtn = document.getElementById('logoutBtn');
   const journalBtn = document.getElementById('journalBtn');
   const journalView = document.getElementById('journalView');
   const journalBackBtn = document.getElementById('journalBackBtn');
@@ -1670,6 +1838,7 @@
   function saveTasks() {
     localStorage.setItem('oneTaskAtATime_tasksByDate', JSON.stringify(tasksByDate));
     localStorage.setItem('oneTaskAtATime_nextId', String(nextId));
+    scheduleCloudSync();
   }
 
   // Loads any previously saved tasks when the app opens, migrating the old
@@ -1712,6 +1881,7 @@
   function saveJournal() {
     localStorage.setItem('oneTaskAtATime_journalByDate', JSON.stringify(journalByDate));
     localStorage.setItem('oneTaskAtATime_nextJournalId', String(nextJournalId));
+    scheduleCloudSync();
   }
 
   function loadJournal() {
@@ -1919,6 +2089,7 @@
 
   function saveCustomTags() {
     localStorage.setItem('oneTaskAtATime_customTags', JSON.stringify(customTags));
+    scheduleCloudSync();
   }
 
   function loadCustomTags() {
@@ -3428,11 +3599,135 @@
     }
   });
 
-  // First render (loads anything saved from before, then draws it)
-  loadTasks();
-  loadJournal();
-  render();
-  updateDateBar();
+  // ---- Login screen wiring ----
+  const loginScreenEl = document.getElementById('loginScreen');
+  const appRootEl = document.getElementById('appRoot');
+  const loginEmailEl = document.getElementById('loginEmail');
+  const loginPasswordEl = document.getElementById('loginPassword');
+  const loginErrorEl = document.getElementById('loginError');
+  const loginLoadingEl = document.getElementById('loginLoading');
+  const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+  const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
+
+  function showLoginScreen() {
+    loginScreenEl.style.display = 'flex';
+    appRootEl.style.display = 'none';
+    loginLoadingEl.style.display = 'none';
+    loginErrorEl.textContent = '';
+  }
+
+  function friendlyAuthError(err) {
+    const map = {
+      'auth/invalid-email': 'That email address looks invalid.',
+      'auth/user-not-found': 'No account found with that email.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/email-already-in-use': 'An account already exists with that email.',
+      'auth/weak-password': 'Password should be at least 6 characters.',
+      'auth/popup-closed-by-user': 'Sign-in was cancelled.',
+      'auth/network-request-failed': 'Network error — check your connection.'
+    };
+    return map[err.code] || err.message || 'Something went wrong. Please try again.';
+  }
+
+  loginSubmitBtn.addEventListener('click', () => {
+    loginErrorEl.textContent = '';
+    const email = loginEmailEl.value.trim();
+    const password = loginPasswordEl.value;
+    if (!email || !password) {
+      loginErrorEl.textContent = 'Please enter both email and password.';
+      return;
+    }
+    auth.signInWithEmailAndPassword(email, password).catch((err) => {
+      loginErrorEl.textContent = friendlyAuthError(err);
+    });
+  });
+
+  signupSubmitBtn.addEventListener('click', () => {
+    loginErrorEl.textContent = '';
+    const email = loginEmailEl.value.trim();
+    const password = loginPasswordEl.value;
+    if (!email || !password) {
+      loginErrorEl.textContent = 'Please enter both email and password.';
+      return;
+    }
+    auth.createUserWithEmailAndPassword(email, password).catch((err) => {
+      loginErrorEl.textContent = friendlyAuthError(err);
+    });
+  });
+
+  googleSignInBtn.addEventListener('click', () => {
+    loginErrorEl.textContent = '';
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch((err) => {
+      loginErrorEl.textContent = friendlyAuthError(err);
+    });
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    if (confirm('Log out? You can log back in anytime to get your tasks.')) {
+      auth.signOut();
+    }
+  });
+
+  // Pulls this user's saved data from the cloud (or migrates local data up
+  // to the cloud the very first time they log in on this device), then
+  // finishes the same startup work the app always did before showing itself.
+  async function initAppDataForUser(uid) {
+    loginLoadingEl.style.display = 'block';
+    try {
+      const snap = await db.collection('users').doc(uid).get();
+      if (snap.exists && snap.data()) {
+        const d = snap.data();
+        tasksByDate = d.tasksByDate || {};
+        nextId = d.nextId || 1;
+        journalByDate = d.journalByDate || {};
+        nextJournalId = d.nextJournalId || 1;
+        customTags = d.customTags || [];
+      } else {
+        // First login ever for this account: bring across whatever's
+        // already on this device (if anything) as a starting point.
+        loadTasks();
+        loadJournal();
+        loadCustomTags();
+      }
+    } catch (e) {
+      // Offline or an error talking to Firestore — fall back to whatever's
+      // cached locally on this device so the app still works.
+      console.error('Could not load cloud data, using local cache:', e);
+      loadTasks();
+      loadJournal();
+      loadCustomTags();
+    }
+
+    processPostponements();
+    selectedDateKey = todayKey();
+    materializeRecurringTasksForDate(selectedDateKey);
+    if (!tasksByDate[selectedDateKey]) tasksByDate[selectedDateKey] = [];
+    tasks = tasksByDate[selectedDateKey];
+
+    render();
+    updateDateBar();
+
+    loginLoadingEl.style.display = 'none';
+    loginScreenEl.style.display = 'none';
+    appRootEl.style.display = 'block';
+
+    // Push current state up right away (harmless if already in sync, and
+    // is what actually creates the cloud document on a first-ever login).
+    scheduleCloudSync();
+  }
+
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      currentUid = user.uid;
+      initAppDataForUser(user.uid);
+    } else {
+      currentUid = null;
+      showLoginScreen();
+    }
+  });
 
   // Registers the service worker so the app can work offline once installed
   if ('serviceWorker' in navigator) {
