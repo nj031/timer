@@ -2523,39 +2523,64 @@
 
   // ---- Drag-and-drop reordering ----
   // Works with mouse, touch, and pen, since Pointer Events cover all of them.
+  // Important: the dragged row is only visually shifted (via CSS transform)
+  // while the finger is down - it is NOT moved in the actual page structure
+  // until the finger lifts. Moving a row in the page structure while it still
+  // holds an active pointer capture causes some Android Chrome versions to
+  // silently cancel the drag mid-gesture (the row would dim briefly, as if
+  // starting to move, then snap back) - floating it visually instead avoids
+  // that entirely.
   function makeDraggable(li) {
     const handle = li.querySelector('.drag-handle');
 
     handle.addEventListener('pointerdown', (e) => {
       e.preventDefault();
+      const startY = e.clientY;
+      let targetSibling = null; // where to actually place li once the finger lifts
+
       li.classList.add('dragging');
+      li.style.position = 'relative';
+      li.style.zIndex = '5';
       handle.setPointerCapture(e.pointerId);
+
+      // Snapshot every other row's position ONCE, at drag start - these
+      // don't move during the drag (only the dragged row floats), so there's
+      // no need to keep re-measuring them.
+      const siblingRects = [...taskListEl.querySelectorAll('.task[data-group="' + li.dataset.group + '"]')]
+        .filter(el => el !== li)
+        .map(el => ({ el, rect: el.getBoundingClientRect() }));
 
       function onMove(moveEvent) {
         // Stop the page/browser from trying to scroll while dragging
         moveEvent.preventDefault();
 
-        // Look at every other task row IN THE SAME SECTION and find the
-        // first one whose vertical middle is below the pointer - we'll
-        // drop just above it. Restricting to the same group (In Progress
-        // vs Done) stops a drag from crossing between the two sections.
-        const siblings = [...taskListEl.querySelectorAll('.task[data-group="' + li.dataset.group + '"]')].filter(el => el !== li);
+        // Float the row itself under the finger - this is purely visual and
+        // never touches the page structure.
+        li.style.transform = `translateY(${moveEvent.clientY - startY}px)`;
+
+        // Figure out where it WOULD land, for use once the finger lifts.
         const y = moveEvent.clientY;
-
-        let nextSibling = null;
-        for (const sib of siblings) {
-          const rect = sib.getBoundingClientRect();
+        targetSibling = null;
+        for (const { el, rect } of siblingRects) {
           const middle = rect.top + rect.height / 2;
-          if (y < middle) {
-            nextSibling = sib;
-            break;
-          }
+          if (y < middle) { targetSibling = el; break; }
         }
+      }
 
-        if (nextSibling) {
-          taskListEl.insertBefore(li, nextSibling);
+      function finishDrag() {
+        li.classList.remove('dragging');
+        li.style.transform = '';
+        li.style.position = '';
+        li.style.zIndex = '';
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', finishDrag);
+        handle.removeEventListener('pointercancel', finishDrag);
+
+        // Now - and only now - actually place the row in the page structure.
+        if (targetSibling) {
+          taskListEl.insertBefore(li, targetSibling);
         } else if (li.dataset.group === 'active') {
-          // Dropping past the last "In Progress" row - stop at the "Done"
+          // Dropped past the last "In Progress" row - stop at the "Done"
           // header instead of overshooting into the Done section itself
           const doneHeader = taskListEl.querySelector('.task-section-header[data-group="done"]');
           if (doneHeader) taskListEl.insertBefore(li, doneHeader);
@@ -2563,13 +2588,6 @@
         } else {
           taskListEl.appendChild(li);
         }
-      }
-
-      function finishDrag() {
-        li.classList.remove('dragging');
-        handle.removeEventListener('pointermove', onMove);
-        handle.removeEventListener('pointerup', finishDrag);
-        handle.removeEventListener('pointercancel', finishDrag);
 
         // Read the new visual order from the DOM and save it as the
         // real task order, so it's kept next time we render.
