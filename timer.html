@@ -168,40 +168,78 @@
   }
 
   /* --- Add task form --- */
-  .add-form {
-    display: flex;
-    gap: 8px;
+  .add-task-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
     margin-bottom: 20px;
-  }
-
-  .add-form input[type="text"] {
-    flex: 2;
-    padding: 10px;
     border: none;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    color: #1B2A32;
-  }
-
-  .add-form input[type="number"] {
-    flex: 1;
-    width: 60px;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    text-align: center;
-    color: #1B2A32;
-  }
-
-  .add-form button {
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     background-color: #9FD8CB;
     color: #1B2A32;
     font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
+  }
+
+  /* --- Add Task modal --- */
+  .modal-label {
+    font-size: 0.8rem;
+    color: #C7D6D2;
+    text-align: left;
+    margin-bottom: -6px;
+  }
+
+  .quick-duration-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .quick-duration-btn {
+    flex: 1 1 30%;
+    padding: 8px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .quick-duration-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .date-option-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .date-option-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .date-option-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .chosen-date-preview {
+    font-size: 0.8rem;
+    color: #C7D6D2;
+    text-align: center;
+    margin-top: -4px;
   }
 
   /* --- Task list --- */
@@ -511,11 +549,7 @@
 
   <!-- LIST VIEW: shown by default, hidden while a task is in focus -->
   <div id="listView">
-    <div class="add-form">
-      <input type="text" id="taskNameInput" placeholder="Task name">
-      <input type="number" id="taskMinutesInput" placeholder="Min" min="1" value="25">
-      <button id="addTaskBtn">Add</button>
-    </div>
+    <button id="openAddTaskBtn" class="add-task-btn">+ Add Task</button>
 
     <div class="date-bar">
       <button id="prevDayBtn" class="date-nav-btn" aria-label="Previous day">‹</button>
@@ -617,6 +651,40 @@
   </div>
 </div>
 
+<!-- Add Task popup -->
+<div class="overlay" id="addTaskOverlay">
+  <div class="menu">
+    <div class="menu-title">Add Task</div>
+
+    <label class="modal-label">Task name</label>
+    <input type="text" id="newTaskNameInput" class="modal-input" placeholder="">
+
+    <label class="modal-label">Timer (minutes)</label>
+    <input type="number" id="newTaskMinutesInput" class="modal-input" placeholder="" min="1">
+
+    <div class="quick-duration-row">
+      <button class="quick-duration-btn" data-min="5">5 min</button>
+      <button class="quick-duration-btn" data-min="10">10 min</button>
+      <button class="quick-duration-btn" data-min="15">15 min</button>
+      <button class="quick-duration-btn" data-min="25">25 min</button>
+      <button class="quick-duration-btn" data-min="45">45 min</button>
+      <button class="quick-duration-btn" data-min="60">60 min</button>
+      <button class="quick-duration-btn" data-min="custom">Custom</button>
+    </div>
+
+    <label class="modal-label">Date</label>
+    <div class="date-option-row">
+      <button class="date-option-btn" id="dateOptToday">Today</button>
+      <button class="date-option-btn" id="dateOptTomorrow">Tomorrow</button>
+      <button class="date-option-btn" id="dateOptChoose">Choose date</button>
+    </div>
+    <div class="chosen-date-preview" id="chosenDatePreview"></div>
+
+    <button class="menu-btn" id="addTaskConfirmBtn">Add Task</button>
+    <button class="menu-btn cancel" id="addTaskCancelBtn">Cancel</button>
+  </div>
+</div>
+
 <script>
   // ---- Element references ----
   const listView = document.getElementById('listView');
@@ -632,9 +700,17 @@
   const breakOverlay = document.getElementById('breakOverlay');
   const breakConfirmBtn = document.getElementById('breakConfirmBtn');
   const breakCancelBtn = document.getElementById('breakCancelBtn');
-  const taskNameInput = document.getElementById('taskNameInput');
-  const taskMinutesInput = document.getElementById('taskMinutesInput');
-  const addTaskBtn = document.getElementById('addTaskBtn');
+  const openAddTaskBtn = document.getElementById('openAddTaskBtn');
+  const addTaskOverlay = document.getElementById('addTaskOverlay');
+  const newTaskNameInput = document.getElementById('newTaskNameInput');
+  const newTaskMinutesInput = document.getElementById('newTaskMinutesInput');
+  const quickDurationBtns = document.querySelectorAll('.quick-duration-btn');
+  const dateOptToday = document.getElementById('dateOptToday');
+  const dateOptTomorrow = document.getElementById('dateOptTomorrow');
+  const dateOptChoose = document.getElementById('dateOptChoose');
+  const chosenDatePreview = document.getElementById('chosenDatePreview');
+  const addTaskConfirmBtn = document.getElementById('addTaskConfirmBtn');
+  const addTaskCancelBtn = document.getElementById('addTaskCancelBtn');
   const taskListEl = document.getElementById('taskList');
 
   // Date navigation elements
@@ -696,7 +772,7 @@
     if (diffDays === 0) return { main: 'Today', sub };
     if (diffDays === -1) return { main: 'Yesterday', sub };
     if (diffDays === 1) return { main: 'Tomorrow', sub };
-    return { main: MONTH_NAMES[d.getMonth()] + ' ' + d.getDate(), sub: 'Day of the week: ' + d.toLocaleDateString(undefined, { weekday: 'long' }) };
+    return { main: MONTH_NAMES[d.getMonth()] + ' ' + d.getDate(), sub };
   }
 
   // Switches which date's task list is currently shown/edited.
@@ -974,25 +1050,100 @@
     }, { passive: false });
   }
 
-  // ---- Task actions ----
-  function addTask() {
-    const name = taskNameInput.value.trim();
-    const minutes = parseFloat(taskMinutesInput.value);
+  // ---- Add Task modal ----
+  let newTaskDateKey = null;     // which date the new task will go to
+  let calendarPurpose = 'navigate'; // 'navigate' = main date bar, 'pickForAddTask' = choosing date inside this modal
+
+  function openAddTaskModal() {
+    newTaskNameInput.value = '';
+    newTaskMinutesInput.value = '';
+    quickDurationBtns.forEach(b => b.classList.remove('selected'));
+
+    // Default the date to whichever date is currently being viewed
+    newTaskDateKey = selectedDateKey;
+    updateDateOptionHighlight();
+    addTaskOverlay.classList.add('open');
+  }
+
+  function closeAddTaskModal() {
+    addTaskOverlay.classList.remove('open');
+  }
+
+  function updateDateOptionHighlight() {
+    dateOptToday.classList.toggle('selected', newTaskDateKey === todayKey());
+    dateOptTomorrow.classList.toggle('selected', newTaskDateKey === addDaysToKey(todayKey(), 1));
+    const isCustomChoice = newTaskDateKey !== todayKey() && newTaskDateKey !== addDaysToKey(todayKey(), 1);
+    dateOptChoose.classList.toggle('selected', isCustomChoice);
+    const label = formatDateLabel(newTaskDateKey);
+    chosenDatePreview.textContent = 'Task will be added to: ' + label.sub;
+  }
+
+  quickDurationBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      quickDurationBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      if (btn.dataset.min === 'custom') {
+        newTaskMinutesInput.value = '';
+        newTaskMinutesInput.focus();
+      } else {
+        newTaskMinutesInput.value = btn.dataset.min;
+      }
+    });
+  });
+
+  // Typing a custom value manually also clears any preset highlight
+  newTaskMinutesInput.addEventListener('input', () => {
+    const matchingPreset = [...quickDurationBtns].find(b => b.dataset.min === newTaskMinutesInput.value);
+    quickDurationBtns.forEach(b => b.classList.toggle('selected', b === matchingPreset));
+  });
+
+  dateOptToday.addEventListener('click', () => {
+    newTaskDateKey = todayKey();
+    updateDateOptionHighlight();
+  });
+
+  dateOptTomorrow.addEventListener('click', () => {
+    newTaskDateKey = addDaysToKey(todayKey(), 1);
+    updateDateOptionHighlight();
+  });
+
+  dateOptChoose.addEventListener('click', () => {
+    // Hide this modal temporarily and reuse the existing calendar to pick a date
+    addTaskOverlay.classList.remove('open');
+    calendarPurpose = 'pickForAddTask';
+    openCalendar();
+  });
+
+  openAddTaskBtn.addEventListener('click', openAddTaskModal);
+  addTaskCancelBtn.addEventListener('click', closeAddTaskModal);
+  addTaskOverlay.addEventListener('click', (e) => {
+    if (e.target === addTaskOverlay) closeAddTaskModal();
+  });
+
+  addTaskConfirmBtn.addEventListener('click', () => {
+    const name = newTaskNameInput.value.trim();
+    const minutes = parseFloat(newTaskMinutesInput.value);
     if (!name || !minutes || minutes <= 0) return; // ignore invalid input
 
     const seconds = Math.round(minutes * 60);
-    tasks.push({
+    const newTask = {
       id: nextId++,
       name: name,
       durationSeconds: seconds,
       remainingSeconds: seconds,
       status: 'not-started'
-    });
+    };
 
-    taskNameInput.value = '';
-    taskMinutesInput.value = 25;
-    render();
-  }
+    if (!tasksByDate[newTaskDateKey]) tasksByDate[newTaskDateKey] = [];
+    tasksByDate[newTaskDateKey].push(newTask);
+
+    if (newTaskDateKey === selectedDateKey) {
+      render(); // it landed on the date we're currently viewing - refresh the visible list
+    } else {
+      saveTasks(); // added to a different date - just persist quietly
+    }
+    closeAddTaskModal();
+  });
 
   // Starts the given task's timer, makes it the active task, and
   // switches to the Focus Screen. Only called from the popup menu's
@@ -1253,7 +1404,7 @@
   }
 
   // ---- Button hookups ----
-  addTaskBtn.addEventListener('click', addTask);
+  // (Add Task button/modal listeners are wired up earlier, alongside the modal logic)
 
   // Pause toggles between pausing and resuming, without leaving the Focus Screen
   focusPauseBtn.addEventListener('click', () => {
@@ -1330,7 +1481,10 @@
   let calViewYear, calViewMonth; // which month the calendar is currently showing
 
   function openCalendar() {
-    const d = keyToDate(selectedDateKey);
+    // When picking a date for a new task, start on whatever date is
+    // currently chosen in that modal; otherwise use the main viewed date.
+    const baseKey = (calendarPurpose === 'pickForAddTask') ? newTaskDateKey : selectedDateKey;
+    const d = keyToDate(baseKey);
     calViewYear = d.getFullYear();
     calViewMonth = d.getMonth();
     renderCalendar();
@@ -1339,6 +1493,12 @@
 
   function closeCalendar() {
     calendarOverlay.classList.remove('open');
+    // If we were picking a date for a new task and the user backed out
+    // without choosing one, bring that modal back up as it was
+    if (calendarPurpose === 'pickForAddTask') {
+      calendarPurpose = 'navigate';
+      addTaskOverlay.classList.add('open');
+    }
   }
 
   function renderCalendar() {
@@ -1348,6 +1508,7 @@
     const firstOfMonth = new Date(calViewYear, calViewMonth, 1);
     const startWeekday = firstOfMonth.getDay(); // 0 = Sunday
     const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+    const highlightKey = (calendarPurpose === 'pickForAddTask') ? newTaskDateKey : selectedDateKey;
 
     // Blank filler cells so day 1 lines up under the correct weekday
     for (let i = 0; i < startWeekday; i++) {
@@ -1361,11 +1522,19 @@
       const btn = document.createElement('button');
       btn.className = 'calendar-day';
       if (key === todayKey()) btn.classList.add('today');
-      if (key === selectedDateKey) btn.classList.add('selected');
+      if (key === highlightKey) btn.classList.add('selected');
       btn.textContent = day;
       btn.addEventListener('click', () => {
-        switchToDate(key);
-        closeCalendar();
+        if (calendarPurpose === 'pickForAddTask') {
+          newTaskDateKey = key;
+          calendarPurpose = 'navigate';
+          calendarOverlay.classList.remove('open');
+          addTaskOverlay.classList.add('open');
+          updateDateOptionHighlight();
+        } else {
+          switchToDate(key);
+          calendarOverlay.classList.remove('open');
+        }
       });
       calendarGrid.appendChild(btn);
     }
