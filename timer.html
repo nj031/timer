@@ -1187,6 +1187,7 @@
     </div>
     <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Title">
     <textarea id="noteContentInput" class="note-content-input" placeholder="Write your note..."></textarea>
+    <button class="menu-btn note-save-btn" id="noteSaveBtn">Save</button>
   </div>
 </div>
 
@@ -1452,6 +1453,7 @@
   const noteBackBtn = document.getElementById('noteBackBtn');
   const noteTitleInput = document.getElementById('noteTitleInput');
   const noteContentInput = document.getElementById('noteContentInput');
+  const noteSaveBtn = document.getElementById('noteSaveBtn');
   const addNoteFab = document.getElementById('addNoteFab');
   const noteMenuBtn = document.getElementById('noteMenuBtn');
   const noteOptionsOverlay = document.getElementById('noteOptionsOverlay');
@@ -1805,26 +1807,23 @@
     addNoteFab.style.display = 'flex';
   }
 
-  // Saves whatever is currently typed (if anything) and returns to the
-  // Journal list. Shared by the in-app Back arrow AND the hardware/system
-  // back button, so both behave identically.
-  function saveCurrentNoteAndClose() {
+  // Actually saves whatever is currently typed. Used only by the explicit
+  // Save button now - Back no longer auto-saves, it just discards and
+  // leaves (see noteBackBtn below), matching a normal "cancel" expectation.
+  function saveCurrentNote() {
     const title = noteTitleInput.value.trim();
     const content = noteContentInput.value.trim();
+    if (!title && !content) return; // nothing to save
 
-    if (title || content) {
-      if (!journalByDate[journalSelectedDateKey]) journalByDate[journalSelectedDateKey] = [];
-      const now = Date.now();
-      if (editingNoteId) {
-        const note = journalByDate[journalSelectedDateKey].find(n => n.id === editingNoteId);
-        if (note) { note.title = title; note.content = content; note.savedAt = now; }
-      } else {
-        journalByDate[journalSelectedDateKey].push({ id: nextJournalId++, title, content, savedAt: now });
-      }
-      saveJournal();
+    if (!journalByDate[journalSelectedDateKey]) journalByDate[journalSelectedDateKey] = [];
+    const now = Date.now();
+    if (editingNoteId) {
+      const note = journalByDate[journalSelectedDateKey].find(n => n.id === editingNoteId);
+      if (note) { note.title = title; note.content = content; note.savedAt = now; }
+    } else {
+      journalByDate[journalSelectedDateKey].push({ id: nextJournalId++, title, content, savedAt: now });
     }
-    closeNoteEditor();
-    renderJournalView();
+    saveJournal();
   }
 
   // ---- History protection for Journal & Note Editor ----
@@ -1899,6 +1898,7 @@
     editingNoteId = null;
     closeNoteEditor();
     renderJournalView();
+    popNoteHistory();
   });
 
   // ---- Tags ----
@@ -2132,10 +2132,11 @@
       breakOverlay.classList.add('open');
     } else if (noteHistoryActive && noteEditView.style.display !== 'none') {
       // This history entry was already consumed by the natural back
-      // navigation (unlike Focus Mode above, we're not cancelling it) -
-      // just sync our own state and save exactly like the in-app arrow would.
+      // navigation. Back discards (matches the in-app arrow) - it does
+      // NOT auto-save; use the Save button for that.
       noteHistoryActive = false;
-      saveCurrentNoteAndClose();
+      closeNoteEditor();
+      renderJournalView();
     } else if (journalHistoryActive && journalView.style.display !== 'none') {
       journalHistoryActive = false;
       hideJournalView();
@@ -3373,10 +3374,18 @@
 
   addNoteFab.addEventListener('click', () => openNoteEditor(null));
 
-  // Back now auto-saves the note before leaving - there's no separate
-  // Save button anymore, so nothing typed is ever accidentally lost.
+  // Back discards without saving (like a normal Cancel) - it no longer
+  // closes the whole app either way, thanks to the history protection above.
   noteBackBtn.addEventListener('click', () => {
-    saveCurrentNoteAndClose();
+    closeNoteEditor();
+    renderJournalView();
+    popNoteHistory();
+  });
+
+  noteSaveBtn.addEventListener('click', () => {
+    saveCurrentNote();
+    closeNoteEditor();
+    renderJournalView();
     popNoteHistory();
   });
 
