@@ -1,5 +1,5 @@
 // Minimal service worker: caches the app so it opens even with no internet.
-const CACHE_NAME = 'focus-timer-v17';
+const CACHE_NAME = 'focus-timer-v18';
 const FILES_TO_CACHE = ['./timer.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
