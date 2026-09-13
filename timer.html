@@ -1310,7 +1310,12 @@
       stopInterval();
       activeTaskId = null;
     }
-    tasks = tasks.filter(t => t.id !== id);
+    // Mutating in place (splice) instead of reassigning "tasks" to a new
+    // array - reassigning would silently disconnect it from
+    // tasksByDate[selectedDateKey], causing deletions to "undo themselves"
+    // the next time the date was switched.
+    const index = tasks.findIndex(t => t.id === id);
+    if (index !== -1) tasks.splice(index, 1);
     render();
   }
 
