@@ -1832,6 +1832,12 @@
   // somewhere to land INSIDE the app, instead of exiting it entirely.
   let journalHistoryActive = false;
   let noteHistoryActive = false;
+  // Calling history.back() ourselves (to consume a checkpoint after the
+  // user taps an in-app button) still fires a popstate event a moment
+  // later - exactly like a real Back press would. This flag tells the
+  // popstate handler "ignore this one, we already handled the view
+  // change ourselves" so it doesn't also react and skip an extra level.
+  let ignoreNextPopstate = false;
 
   function pushJournalHistory() {
     if (!journalHistoryActive) {
@@ -1841,6 +1847,7 @@
   function popJournalHistory() {
     if (journalHistoryActive) {
       journalHistoryActive = false;
+      ignoreNextPopstate = true;
       try { history.back(); } catch (e) { /* see note above */ }
     }
   }
@@ -1852,6 +1859,7 @@
   function popNoteHistory() {
     if (noteHistoryActive) {
       noteHistoryActive = false;
+      ignoreNextPopstate = true;
       try { history.back(); } catch (e) { /* see note above */ }
     }
   }
@@ -2113,6 +2121,7 @@
     // so Back presses on the list screen behave normally again.
     if (focusHistoryActive) {
       focusHistoryActive = false;
+      ignoreNextPopstate = true;
       try {
         history.back();
       } catch (e) { /* see note in showFocusView() */ }
@@ -2123,6 +2132,13 @@
   // treat it exactly like pressing the Break button instead of closing
   // the app and silently killing the timer.
   window.addEventListener('popstate', () => {
+    // Ignore pops we triggered ourselves (see ignoreNextPopstate above) -
+    // those already had their view change handled at the moment we called
+    // history.back(), so reacting again here would skip an extra level.
+    if (ignoreNextPopstate) {
+      ignoreNextPopstate = false;
+      return;
+    }
     if (timesUpOverlay.classList.contains('open')) {
       // The task already finished - back button should behave like "Back", not "Break"
       history.pushState({ focusScreen: true }, '');
