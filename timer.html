@@ -1699,6 +1699,10 @@
   let tasks = [];            // reference into tasksByDate[selectedDateKey]
   let activeTaskId = null;   // which task is currently shown in the main timer
   let timerId = null;        // the running countdown (like before)
+  let timerEndTimestamp = null; // real wall-clock time the active timer should hit 0 -
+                                 // lets the countdown "catch up" correctly after Android
+                                 // freezes the app in the background, instead of just
+                                 // freezing in place until it's reopened
   let nextId = 1;            // simple counter to give each task a unique id
 
   // ---- Date helpers ----
@@ -3286,39 +3290,62 @@
   }
 
   // ---- Timer engine (works on whichever task is active) ----
+  // Recomputes remainingSeconds from the real end-time (rather than trusting
+  // that a tick fired every second) and handles completion. Shared by the
+  // regular 1s interval tick and the "app just came back to foreground"
+  // resync, so both paths behave identically.
+  function syncTimerToRealTime() {
+    const task = getActiveTask();
+    if (!task) { stopInterval(); return; }
+    if (timerEndTimestamp !== null) {
+      task.remainingSeconds = Math.max(0, Math.round((timerEndTimestamp - Date.now()) / 1000));
+    }
+
+    if (task.remainingSeconds > 0) {
+      updateFocusScreen(); // lightweight - won't disturb a drag in progress
+      saveTasks();
+      // Refresh the notification every 10s (not every second - avoids
+      // spamming the notification system and draining battery)
+      if (task.remainingSeconds % 10 === 0) {
+        updateActiveNotification(task, false);
+      }
+    } else {
+      task.status = 'completed';
+      stopInterval();
+      clearActiveNotification();
+      showCompletionNotification(task);
+      render();
+      // Stay in Focus Mode context - show the completion popup instead
+      // of silently dropping back to the list
+      timesUpTaskName.textContent = task.name;
+      timesUpOverlay.classList.add('open');
+    }
+  }
+
   function runInterval() {
     if (timerId !== null) return; // already running
-    timerId = setInterval(() => {
-      const task = getActiveTask();
-      if (!task) { stopInterval(); return; }
-
-      if (task.remainingSeconds > 0) {
-        task.remainingSeconds--;
-        updateFocusScreen(); // lightweight - won't disturb a drag in progress
-        saveTasks();
-        // Refresh the notification every 10s (not every second - avoids
-        // spamming the notification system and draining battery)
-        if (task.remainingSeconds % 10 === 0) {
-          updateActiveNotification(task, false);
-        }
-      } else {
-        task.status = 'completed';
-        stopInterval();
-        clearActiveNotification();
-        showCompletionNotification(task);
-        render();
-        // Stay in Focus Mode context - show the completion popup instead
-        // of silently dropping back to the list
-        timesUpTaskName.textContent = task.name;
-        timesUpOverlay.classList.add('open');
-      }
-    }, 1000);
+    const task = getActiveTask();
+    // Anchor to a real end-time based on whatever remainingSeconds is right
+    // now (works whether this is a fresh start, a resume, or a restart).
+    if (task) timerEndTimestamp = Date.now() + task.remainingSeconds * 1000;
+    timerId = setInterval(syncTimerToRealTime, 1000);
   }
 
   function stopInterval() {
     clearInterval(timerId);
     timerId = null;
+    timerEndTimestamp = null;
   }
+
+  // If Android freezes the page's JS while backgrounded, any queued ticks
+  // are lost - so when the app becomes visible again, immediately snap the
+  // countdown to what it should actually be (rather than waiting up to a
+  // full second, or worse, having lost time silently).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && timerId !== null) {
+      syncTimerToRealTime();
+    }
+  });
 
   // ---- Button hookups ----
   // (Add Task button/modal listeners are wired up earlier, alongside the modal logic)
