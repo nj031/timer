@@ -42,27 +42,29 @@
     margin-bottom: 24px;
   }
 
-  #activeName, #focusName {
+  #activeName {
     font-size: 1rem;
     color: #C7D6D2;
     margin-bottom: 8px;
     min-height: 1.2em;
   }
 
-  .focus-status {
-    display: inline-block;
-    font-size: 0.75rem;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background-color: #C78A3A;
-    color: #1B2A32;
-    margin-bottom: 10px;
+  /* Small centered section labels used in Focus Mode ("TASK", "SUBTASKS") */
+  .focus-section-heading {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #9FD8CB;
+    text-align: center;
+    margin-bottom: 6px;
   }
 
   #focusName {
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 1.6rem;
+    font-weight: 700;
     color: #F2EFE9;
+    text-align: center;
+    margin-bottom: 22px;
   }
 
   /* --- Circular ring timer (Focus Screen only) --- */
@@ -119,40 +121,35 @@
 
   /* --- Subtasks (Focus Mode - interactive) --- */
   .focus-subtasks {
-    margin-top: 18px;
-    text-align: left;
-  }
-
-  .focus-subtasks-title {
-    font-size: 0.8rem;
-    color: #C7D6D2;
-    margin-bottom: 6px;
+    margin-top: 8px;
+    text-align: center;
   }
 
   .focus-subtasks-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 14px;
   }
 
   .focus-subtask-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
   }
 
   .focus-subtask-checkbox {
-    width: 18px;
-    height: 18px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid #9FD8CB;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: #1B2A32;
   }
 
@@ -166,7 +163,7 @@
   }
 
   .focus-subtask-name {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     color: #F2EFE9;
   }
 
@@ -393,6 +390,166 @@
     color: #C7D6D2;
     text-align: center;
     margin-top: -4px;
+  }
+
+  /* --- Repeat option (Add/Edit Task modals) --- */
+  .repeat-type-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .repeat-type-btn, .edit-repeat-type-btn {
+    flex: 1 1 30%;
+    padding: 8px 4px;
+    border: none;
+    border-radius: 8px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .repeat-type-btn.selected, .edit-repeat-type-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .repeat-custom-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: -4px;
+  }
+
+  .repeat-custom-mode-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .repeat-custom-mode-btn, .edit-repeat-custom-mode-btn {
+    flex: 1;
+    padding: 7px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #22343C;
+    color: #F2EFE9;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  .repeat-custom-mode-btn.selected, .edit-repeat-custom-mode-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .repeat-weekday-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .repeat-weekday-btn, .edit-repeat-weekday-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background-color: #22343C;
+    color: #F2EFE9;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .repeat-weekday-btn.selected, .edit-repeat-weekday-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  /* --- Tag option (Add/Edit Task modals) --- */
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 20px;
+    background-color: #3A4C55;
+    color: #F2EFE9;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .tag-btn.selected {
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+  }
+
+  .tag-add-input-row {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .tag-add-input-row input {
+    flex: 1;
+  }
+
+  /* --- Postpone if incomplete toggle (Add/Edit Task modals) --- */
+  .postpone-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background-color: #3A4C55;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .toggle-track::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background-color: #F2EFE9;
+    border-radius: 50%;
+    transition: transform 0.15s;
+  }
+
+  .toggle-switch input:checked + .toggle-track {
+    background-color: #9FD8CB;
+  }
+
+  .toggle-switch input:checked + .toggle-track::before {
+    transform: translateX(20px);
+    background-color: #1B2A32;
   }
 
   /* --- Task list --- */
@@ -739,11 +896,11 @@
       <button id="focusBreakBtn">Break</button>
     </div>
 
-    <div class="focus-status">In Progress</div>
+    <div class="focus-section-heading">TASK</div>
     <div id="focusName">Task name</div>
 
     <div class="focus-subtasks" id="focusSubtasksBlock" style="display: none;">
-      <div class="focus-subtasks-title">Subtasks</div>
+      <div class="focus-section-heading">SUBTASKS</div>
       <ul class="focus-subtasks-list" id="focusSubtasksList"></ul>
     </div>
   </div>
@@ -757,7 +914,6 @@
     <button class="menu-btn" id="menuResetBtn" style="display: none;">↺ Reset</button>
     <button class="menu-btn" id="menuEditBtn">✏ Edit</button>
     <button class="menu-btn" id="menuDoneBtn">✓ Done</button>
-    <button class="menu-btn" id="menuCarryBtn">➡ Carry to Next Day</button>
     <button class="menu-btn danger" id="menuDeleteBtn">🗑 Delete</button>
     <button class="menu-btn cancel" id="menuCancelBtn">Cancel</button>
   </div>
@@ -816,6 +972,42 @@
       <button class="date-option-btn" id="editDateOptChoose">Choose date</button>
     </div>
     <div class="chosen-date-preview" id="editChosenDatePreview"></div>
+
+    <label class="modal-label">Repeat</label>
+    <div class="repeat-type-row" id="editRepeatTypeRow">
+      <button class="edit-repeat-type-btn selected" data-repeat="none">Does not repeat</button>
+      <button class="edit-repeat-type-btn" data-repeat="daily">Daily</button>
+      <button class="edit-repeat-type-btn" data-repeat="weekly">Weekly</button>
+      <button class="edit-repeat-type-btn" data-repeat="monthly">Monthly</button>
+      <button class="edit-repeat-type-btn" data-repeat="custom">Custom</button>
+    </div>
+    <div class="repeat-custom-block" id="editRepeatCustomBlock" style="display: none;">
+      <div class="repeat-custom-mode-row">
+        <button class="edit-repeat-custom-mode-btn selected" data-mode="weekdays">Selected weekdays</button>
+        <button class="edit-repeat-custom-mode-btn" data-mode="everyX">Every X days</button>
+      </div>
+      <div class="repeat-weekday-row" id="editRepeatWeekdayRow">
+        <button class="edit-repeat-weekday-btn" data-day="0">S</button>
+        <button class="edit-repeat-weekday-btn" data-day="1">M</button>
+        <button class="edit-repeat-weekday-btn" data-day="2">T</button>
+        <button class="edit-repeat-weekday-btn" data-day="3">W</button>
+        <button class="edit-repeat-weekday-btn" data-day="4">T</button>
+        <button class="edit-repeat-weekday-btn" data-day="5">F</button>
+        <button class="edit-repeat-weekday-btn" data-day="6">S</button>
+      </div>
+      <input type="number" id="editRepeatEveryXInput" class="modal-input" placeholder="Every X days" min="2" style="display: none;">
+    </div>
+
+    <label class="modal-label">Tag</label>
+    <div class="tag-row" id="editTagRow"></div>
+
+    <div class="postpone-row">
+      <label class="modal-label" style="margin-bottom: 0;">Postpone if incomplete</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="editPostponeToggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
 
     <button class="menu-btn" id="editSaveBtn">Save</button>
     <button class="menu-btn cancel" id="editCancelBtn">Cancel</button>
@@ -881,6 +1073,42 @@
     </div>
     <div class="chosen-date-preview" id="chosenDatePreview"></div>
 
+    <label class="modal-label">Repeat</label>
+    <div class="repeat-type-row" id="repeatTypeRow">
+      <button class="repeat-type-btn selected" data-repeat="none">Does not repeat</button>
+      <button class="repeat-type-btn" data-repeat="daily">Daily</button>
+      <button class="repeat-type-btn" data-repeat="weekly">Weekly</button>
+      <button class="repeat-type-btn" data-repeat="monthly">Monthly</button>
+      <button class="repeat-type-btn" data-repeat="custom">Custom</button>
+    </div>
+    <div class="repeat-custom-block" id="repeatCustomBlock" style="display: none;">
+      <div class="repeat-custom-mode-row">
+        <button class="repeat-custom-mode-btn selected" data-mode="weekdays">Selected weekdays</button>
+        <button class="repeat-custom-mode-btn" data-mode="everyX">Every X days</button>
+      </div>
+      <div class="repeat-weekday-row" id="repeatWeekdayRow">
+        <button class="repeat-weekday-btn" data-day="0">S</button>
+        <button class="repeat-weekday-btn" data-day="1">M</button>
+        <button class="repeat-weekday-btn" data-day="2">T</button>
+        <button class="repeat-weekday-btn" data-day="3">W</button>
+        <button class="repeat-weekday-btn" data-day="4">T</button>
+        <button class="repeat-weekday-btn" data-day="5">F</button>
+        <button class="repeat-weekday-btn" data-day="6">S</button>
+      </div>
+      <input type="number" id="repeatEveryXInput" class="modal-input" placeholder="Every X days" min="2" style="display: none;">
+    </div>
+
+    <label class="modal-label">Tag</label>
+    <div class="tag-row" id="tagRow"></div>
+
+    <div class="postpone-row">
+      <label class="modal-label" style="margin-bottom: 0;">Postpone if incomplete</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="postponeToggle">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
     <button class="menu-btn" id="addTaskConfirmBtn">Add Task</button>
     <button class="menu-btn cancel" id="addTaskCancelBtn">Cancel</button>
   </div>
@@ -918,6 +1146,12 @@
   const dateOptTomorrow = document.getElementById('dateOptTomorrow');
   const dateOptChoose = document.getElementById('dateOptChoose');
   const chosenDatePreview = document.getElementById('chosenDatePreview');
+  const repeatTypeRow = document.getElementById('repeatTypeRow');
+  const repeatCustomBlock = document.getElementById('repeatCustomBlock');
+  const repeatWeekdayRow = document.getElementById('repeatWeekdayRow');
+  const repeatEveryXInput = document.getElementById('repeatEveryXInput');
+  const tagRow = document.getElementById('tagRow');
+  const postponeToggle = document.getElementById('postponeToggle');
   const addTaskConfirmBtn = document.getElementById('addTaskConfirmBtn');
   const addTaskCancelBtn = document.getElementById('addTaskCancelBtn');
   const taskListEl = document.getElementById('taskList');
@@ -987,6 +1221,7 @@
   // Switches which date's task list is currently shown/edited.
   function switchToDate(key) {
     selectedDateKey = key;
+    materializeRecurringTasksForDate(key);
     if (!tasksByDate[key]) tasksByDate[key] = [];
     tasks = tasksByDate[key];
     render();
@@ -998,6 +1233,87 @@
     dateLabelMain.textContent = label.main;
     dateLabelSub.textContent = label.sub;
     todayBtn.style.display = (selectedDateKey === todayKey()) ? 'none' : 'inline-block';
+  }
+
+  // ---- Recurring tasks ----
+  // A task with repeat.type !== 'none' and no recurringId is a "template" -
+  // it lives on its own anchor date like a normal task, and this function
+  // lazily creates a fresh independent copy ("occurrence") on any later
+  // date that matches its rule, the first time that date is viewed.
+  // Generated occurrences are tagged with recurringId so they are never
+  // themselves treated as templates (no cascading duplication).
+  function matchesRecurrence(rule, anchorKey, targetKey) {
+    const anchor = keyToDate(anchorKey);
+    const target = keyToDate(targetKey);
+    const diffDays = Math.round((target - anchor) / 86400000);
+    if (diffDays <= 0) return false; // only generate for dates AFTER the template's own date
+
+    switch (rule.type) {
+      case 'daily': return true;
+      case 'weekly': return target.getDay() === anchor.getDay();
+      case 'monthly': return target.getDate() === anchor.getDate();
+      case 'custom':
+        if (rule.mode === 'weekdays') return (rule.weekdays || []).includes(target.getDay());
+        if (rule.mode === 'everyX') return diffDays % Math.max(2, rule.everyX || 2) === 0;
+        return false;
+      default: return false;
+    }
+  }
+
+  function materializeRecurringTasksForDate(dateKey) {
+    let created = false;
+    Object.keys(tasksByDate).forEach((sourceDateKey) => {
+      tasksByDate[sourceDateKey].forEach((template) => {
+        if (!template.repeat || template.repeat.type === 'none') return;
+        if (template.recurringId) return; // this is itself a generated occurrence, not a template
+        if (dateKey <= sourceDateKey) return;
+        if (!matchesRecurrence(template.repeat, sourceDateKey, dateKey)) return;
+
+        const already = tasksByDate[dateKey] && tasksByDate[dateKey].some(t => t.recurringId === template.id);
+        if (already) return;
+
+        if (!tasksByDate[dateKey]) tasksByDate[dateKey] = [];
+        tasksByDate[dateKey].push({
+          id: nextId++,
+          name: template.name,
+          durationSeconds: template.durationSeconds,
+          remainingSeconds: template.durationSeconds,
+          status: 'not-started',
+          subtasks: (template.subtasks || []).map(s => ({ id: s.id, name: s.name, completed: false })),
+          tag: template.tag || null,
+          repeat: { type: 'none' },
+          postponeIfIncomplete: template.postponeIfIncomplete || false,
+          recurringId: template.id
+        });
+        created = true;
+      });
+    });
+    if (created) saveTasks();
+  }
+
+  // ---- Postpone if incomplete ----
+  // Runs once when the app opens. Moves any past-date task with the
+  // "postponeIfIncomplete" flag (that isn't completed) forward exactly ONE
+  // day, then marks it so it never moves again on later app opens.
+  function processPostponements() {
+    const today = todayKey();
+    let moved = false;
+    Object.keys(tasksByDate).forEach((dateKey) => {
+      if (dateKey >= today) return; // only past, fully-elapsed days are processed
+      const list = tasksByDate[dateKey];
+      for (let i = list.length - 1; i >= 0; i--) {
+        const task = list[i];
+        if (task.postponeIfIncomplete && task.status !== 'completed' && !task.postponedAlready) {
+          const targetKey = addDaysToKey(dateKey, 1);
+          list.splice(i, 1);
+          task.postponedAlready = true; // moves only once, ever - never cascades further
+          if (!tasksByDate[targetKey]) tasksByDate[targetKey] = [];
+          tasksByDate[targetKey].push(task);
+          moved = true;
+        }
+      }
+    });
+    if (moved) saveTasks();
   }
 
   // Saves everything (all dates) to the phone so it survives closing the app
@@ -1029,9 +1345,126 @@
     }
     if (savedNextId) nextId = Number(savedNextId);
 
+    processPostponements();
+
     selectedDateKey = todayKey();
+    materializeRecurringTasksForDate(selectedDateKey);
     if (!tasksByDate[selectedDateKey]) tasksByDate[selectedDateKey] = [];
     tasks = tasksByDate[selectedDateKey];
+  }
+
+  // ---- Tags ----
+  const DEFAULT_TAGS = ['Personal', 'Work', 'Study', 'Health'];
+  let customTags = [];
+
+  function allTags() {
+    return [...DEFAULT_TAGS, ...customTags];
+  }
+
+  function saveCustomTags() {
+    localStorage.setItem('oneTaskAtATime_customTags', JSON.stringify(customTags));
+  }
+
+  function loadCustomTags() {
+    try {
+      customTags = JSON.parse(localStorage.getItem('oneTaskAtATime_customTags')) || [];
+    } catch (e) {
+      customTags = [];
+    }
+  }
+
+  // Renders the row of tag chips (+ "Add Tag") into the given container.
+  // onSelect(tagName) is called whenever the user picks or creates a tag.
+  function renderTagRow(container, selectedTag, onSelect) {
+    container.innerHTML = '';
+    allTags().forEach((tag) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tag-btn' + (tag === selectedTag ? ' selected' : '');
+      btn.textContent = tag;
+      btn.addEventListener('click', () => onSelect(tag));
+      container.appendChild(btn);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'tag-btn';
+    addBtn.textContent = '+ Add Tag';
+    addBtn.addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.className = 'tag-add-input-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'modal-input';
+      input.placeholder = 'New tag name';
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type = 'button';
+      confirmBtn.className = 'tag-btn';
+      confirmBtn.textContent = 'Add';
+      confirmBtn.addEventListener('click', () => {
+        const name = input.value.trim();
+        if (name && !allTags().includes(name)) {
+          customTags.push(name);
+          saveCustomTags();
+        }
+        if (name) onSelect(name);
+      });
+      row.appendChild(input);
+      row.appendChild(confirmBtn);
+      addBtn.replaceWith(row);
+      input.focus();
+    });
+    container.appendChild(addBtn);
+  }
+
+  // ---- Repeat option (shared between Add Task and Edit Task modals) ----
+  function setupRepeatUI(typeRow, customBlock, weekdayRow, everyXInput, typeBtnClass, modeBtnClass, weekdayBtnClass) {
+    typeRow.querySelectorAll('.' + typeBtnClass).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        typeRow.querySelectorAll('.' + typeBtnClass).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        customBlock.style.display = (btn.dataset.repeat === 'custom') ? 'flex' : 'none';
+      });
+    });
+    customBlock.querySelectorAll('.' + modeBtnClass).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        customBlock.querySelectorAll('.' + modeBtnClass).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        const isWeekdays = btn.dataset.mode === 'weekdays';
+        weekdayRow.style.display = isWeekdays ? 'flex' : 'none';
+        everyXInput.style.display = isWeekdays ? 'none' : 'block';
+      });
+    });
+    weekdayRow.querySelectorAll('.' + weekdayBtnClass).forEach((btn) => {
+      btn.addEventListener('click', () => btn.classList.toggle('selected'));
+    });
+  }
+
+  function readRepeatRule(typeRow, customBlock, weekdayRow, everyXInput, typeBtnClass, modeBtnClass, weekdayBtnClass) {
+    const selectedTypeBtn = typeRow.querySelector('.' + typeBtnClass + '.selected');
+    const type = selectedTypeBtn ? selectedTypeBtn.dataset.repeat : 'none';
+    if (type !== 'custom') return { type };
+    const modeBtn = customBlock.querySelector('.' + modeBtnClass + '.selected');
+    const mode = modeBtn ? modeBtn.dataset.mode : 'weekdays';
+    if (mode === 'weekdays') {
+      const days = [...weekdayRow.querySelectorAll('.' + weekdayBtnClass + '.selected')].map(b => Number(b.dataset.day));
+      return { type: 'custom', mode: 'weekdays', weekdays: days };
+    }
+    const everyX = Math.max(2, parseInt(everyXInput.value) || 2);
+    return { type: 'custom', mode: 'everyX', everyX };
+  }
+
+  function applyRepeatRuleToUI(rule, typeRow, customBlock, weekdayRow, everyXInput, typeBtnClass, modeBtnClass, weekdayBtnClass) {
+    const type = (rule && rule.type) || 'none';
+    typeRow.querySelectorAll('.' + typeBtnClass).forEach(b => b.classList.toggle('selected', b.dataset.repeat === type));
+    customBlock.style.display = (type === 'custom') ? 'flex' : 'none';
+    const mode = (rule && rule.mode) || 'weekdays';
+    customBlock.querySelectorAll('.' + modeBtnClass).forEach(b => b.classList.toggle('selected', b.dataset.mode === mode));
+    weekdayRow.style.display = (mode === 'weekdays') ? 'flex' : 'none';
+    everyXInput.style.display = (mode === 'everyX') ? 'block' : 'none';
+    const selectedDays = (rule && rule.weekdays) || [];
+    weekdayRow.querySelectorAll('.' + weekdayBtnClass).forEach(b => b.classList.toggle('selected', selectedDays.includes(Number(b.dataset.day))));
+    everyXInput.value = (rule && rule.everyX) || '';
   }
 
   // ---- Helpers ----
@@ -1108,6 +1541,7 @@
   function showFocusView() {
     listView.style.display = 'none';
     focusView.style.display = 'block';
+    calendarBtn.style.display = 'none'; // Calendar isn't accessible from Focus Mode
     if (!focusHistoryActive) {
       history.pushState({ focusScreen: true }, '');
       focusHistoryActive = true;
@@ -1117,6 +1551,7 @@
   function showListView() {
     focusView.style.display = 'none';
     listView.style.display = 'block';
+    calendarBtn.style.display = 'block';
     // Consume the fake history entry now that we've left Focus Mode,
     // so Back presses on the list screen behave normally again.
     if (focusHistoryActive) {
@@ -1323,11 +1758,22 @@
   let newTaskDateKey = null;     // which date the new task will go to
   let calendarPurpose = 'navigate'; // 'navigate' = main date bar, 'pickForAddTask' = choosing date inside this modal
 
+  let newTaskTag = null;
+
+  function refreshAddTagRow() {
+    renderTagRow(tagRow, newTaskTag, (tag) => { newTaskTag = tag; refreshAddTagRow(); });
+  }
+
   function openAddTaskModal() {
     newTaskNameInput.value = '';
     newTaskMinutesInput.value = '';
     quickDurationBtns.forEach(b => b.classList.remove('selected'));
     subtaskInputsContainer.innerHTML = ''; // start with no subtask fields
+
+    applyRepeatRuleToUI({ type: 'none' }, repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
+    newTaskTag = null;
+    refreshAddTagRow();
+    postponeToggle.checked = false;
 
     // Default the date to whichever date is currently being viewed
     newTaskDateKey = selectedDateKey;
@@ -1375,6 +1821,8 @@
     });
   });
 
+  setupRepeatUI(repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
+
   // Typing a custom value manually also clears any preset highlight
   newTaskMinutesInput.addEventListener('input', () => {
     const matchingPreset = [...quickDurationBtns].find(b => b.dataset.min === newTaskMinutesInput.value);
@@ -1417,13 +1865,18 @@
     const subtasks = subtaskNames.map((subName, i) => ({ id: i + 1, name: subName, completed: false }));
 
     const seconds = Math.round(minutes * 60);
+    const repeatRule = readRepeatRule(repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
     const newTask = {
       id: nextId++,
       name: name,
       durationSeconds: seconds,
       remainingSeconds: seconds,
       status: 'not-started',
-      subtasks: subtasks
+      subtasks: subtasks,
+      tag: newTaskTag,
+      repeat: repeatRule,
+      postponeIfIncomplete: postponeToggle.checked,
+      recurringId: null
     };
 
     if (!tasksByDate[newTaskDateKey]) tasksByDate[newTaskDateKey] = [];
@@ -1497,7 +1950,6 @@
   const menuResetBtn = document.getElementById('menuResetBtn');
   const menuEditBtn = document.getElementById('menuEditBtn');
   const menuDoneBtn = document.getElementById('menuDoneBtn');
-  const menuCarryBtn = document.getElementById('menuCarryBtn');
   const menuDeleteBtn = document.getElementById('menuDeleteBtn');
   const menuCancelBtn = document.getElementById('menuCancelBtn');
 
@@ -1511,8 +1963,6 @@
     menuStartBtn.textContent = task.status === 'in-progress' ? '▶ Continue' : '▶ Start';
     // Reset only makes sense once a task has actually been started before
     menuResetBtn.style.display = task.status === 'in-progress' ? 'block' : 'none';
-    // Carrying forward only makes sense for tasks that aren't finished yet
-    menuCarryBtn.style.display = task.status === 'completed' ? 'none' : 'block';
     overlay.classList.add('open');
   }
 
@@ -1561,8 +2011,21 @@
   const editDateOptTomorrow = document.getElementById('editDateOptTomorrow');
   const editDateOptChoose = document.getElementById('editDateOptChoose');
   const editChosenDatePreview = document.getElementById('editChosenDatePreview');
+  const editRepeatTypeRow = document.getElementById('editRepeatTypeRow');
+  const editRepeatCustomBlock = document.getElementById('editRepeatCustomBlock');
+  const editRepeatWeekdayRow = document.getElementById('editRepeatWeekdayRow');
+  const editRepeatEveryXInput = document.getElementById('editRepeatEveryXInput');
+  const editTagRow = document.getElementById('editTagRow');
+  const editPostponeToggle = document.getElementById('editPostponeToggle');
   const editSaveBtn = document.getElementById('editSaveBtn');
   const editCancelBtn = document.getElementById('editCancelBtn');
+
+  setupRepeatUI(editRepeatTypeRow, editRepeatCustomBlock, editRepeatWeekdayRow, editRepeatEveryXInput, 'edit-repeat-type-btn', 'edit-repeat-custom-mode-btn', 'edit-repeat-weekday-btn');
+
+  let editTaskTag = null;
+  function refreshEditTagRow() {
+    renderTagRow(editTagRow, editTaskTag, (tag) => { editTaskTag = tag; refreshEditTagRow(); });
+  }
 
   // Creates one subtask row. If `subtask` is given, pre-fills its name and
   // tags the row with its original id (so Save can tell "renamed existing"
@@ -1653,6 +2116,11 @@
     editSubtaskInputsContainer.innerHTML = '';
     (task.subtasks || []).forEach(sub => addEditSubtaskRow(sub));
 
+    applyRepeatRuleToUI(task.repeat || { type: 'none' }, editRepeatTypeRow, editRepeatCustomBlock, editRepeatWeekdayRow, editRepeatEveryXInput, 'edit-repeat-type-btn', 'edit-repeat-custom-mode-btn', 'edit-repeat-weekday-btn');
+    editTaskTag = task.tag || null;
+    refreshEditTagRow();
+    editPostponeToggle.checked = !!task.postponeIfIncomplete;
+
     updateEditDateOptionHighlight();
     editOverlay.classList.add('open');
   }
@@ -1699,6 +2167,12 @@
       }
     });
     task.subtasks = newSubtasks;
+
+    // These were being shown correctly when the modal opened, but were
+    // never being read back on Save - fixing that here.
+    task.tag = editTaskTag;
+    task.repeat = readRepeatRule(editRepeatTypeRow, editRepeatCustomBlock, editRepeatWeekdayRow, editRepeatEveryXInput, 'edit-repeat-type-btn', 'edit-repeat-custom-mode-btn', 'edit-repeat-weekday-btn');
+    task.postponeIfIncomplete = editPostponeToggle.checked;
 
     // If the date was changed, MOVE the task to that date
     if (editTaskDateKey !== selectedDateKey) {
@@ -1947,28 +2421,6 @@
       task.remainingSeconds = task.durationSeconds; // NOT 00:00 - back to the original duration
       render();
     }
-    closeTaskMenu();
-  });
-
-  // ---- Carry to Next Day (MOVES the task - removes it from today, adds it to tomorrow) ----
-  menuCarryBtn.addEventListener('click', () => {
-    const index = tasks.findIndex(t => t.id === menuTaskId);
-    if (index === -1) { closeTaskMenu(); return; }
-
-    // If somehow the task being moved is the active one, stop its timer first
-    if (menuTaskId === activeTaskId) {
-      stopInterval();
-      activeTaskId = null;
-      clearActiveNotification();
-    }
-
-    const [task] = tasks.splice(index, 1); // remove from today - mutates in place, keeping tasksByDate in sync
-
-    const targetKey = addDaysToKey(selectedDateKey, 1);
-    if (!tasksByDate[targetKey]) tasksByDate[targetKey] = [];
-    tasksByDate[targetKey].push(task); // move the SAME task object - name, duration, subtasks, and status all travel with it
-
-    render();
     closeTaskMenu();
   });
 
