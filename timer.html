@@ -1076,6 +1076,27 @@
     padding: 20px 0;
   }
 
+  /* --- Settings page --- */
+  .settings-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6B7C93;
+    margin: 4px 0 10px;
+  }
+
+  .settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .settings-hint {
+    font-size: 0.8rem;
+    color: #6B7C93;
+    line-height: 1.4;
+    margin-top: 8px;
+  }
+
   /* --- Task action popup --- */
   .overlay {
     display: none;
@@ -1657,7 +1678,26 @@
       <button id="settingsBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
       <h1>Settings</h1>
     </div>
-    <div class="empty-msg">More settings coming soon.</div>
+    <div class="settings-section">
+      <div class="settings-section-title">Account</div>
+      <button class="menu-btn danger" id="deleteAccountBtn">Delete Account</button>
+      <div class="settings-hint">Permanently deletes your account and all your tasks, journal entries, and tags from the cloud. This cannot be undone.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account confirmation - the password field only shows for Email/Password accounts -->
+<div class="overlay" id="deleteAccountOverlay">
+  <div class="menu">
+    <div class="menu-title">Delete your account?</div>
+    <div class="menu-subtext">This permanently deletes your account and all your tasks, journal entries, and tags from the cloud. This cannot be undone.</div>
+    <div id="deleteAccountPasswordBlock" style="display: none;">
+      <label class="auth-label" for="deleteAccountPassword">Enter your password to confirm</label>
+      <input type="password" id="deleteAccountPassword" class="login-input" autocomplete="current-password">
+    </div>
+    <div id="deleteAccountError" class="auth-error"></div>
+    <button class="menu-btn danger" id="deleteAccountConfirmBtn">Delete My Account</button>
+    <button class="menu-btn cancel" id="deleteAccountCancelBtn">Cancel</button>
   </div>
 </div>
 
@@ -2132,6 +2172,13 @@
   const permanentDeleteOverlay = document.getElementById('permanentDeleteOverlay');
   const permanentDeleteConfirmBtn = document.getElementById('permanentDeleteConfirmBtn');
   const permanentDeleteCancelBtn = document.getElementById('permanentDeleteCancelBtn');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+  const deleteAccountOverlay = document.getElementById('deleteAccountOverlay');
+  const deleteAccountPasswordBlock = document.getElementById('deleteAccountPasswordBlock');
+  const deleteAccountPassword = document.getElementById('deleteAccountPassword');
+  const deleteAccountError = document.getElementById('deleteAccountError');
+  const deleteAccountConfirmBtn = document.getElementById('deleteAccountConfirmBtn');
+  const deleteAccountCancelBtn = document.getElementById('deleteAccountCancelBtn');
   const focusName = document.getElementById('focusName');
   const focusDisplay = document.getElementById('focusDisplay');
   const focusPauseBtn = document.getElementById('focusPauseBtn');
@@ -3143,7 +3190,8 @@
   // stuck open on top of it.
   const scopedOverlays = [
     noteOptionsOverlay, archivedActionOverlay,
-    permanentDeleteOverlay, drawerOverlay, journalDrawerOverlay
+    permanentDeleteOverlay, drawerOverlay, journalDrawerOverlay,
+    deleteAccountOverlay
   ];
 
   window.addEventListener('popstate', () => {
@@ -4888,6 +4936,73 @@
     drawerOverlay.classList.remove('open');
     if (confirm('Log out? You can log back in anytime to get your tasks.')) {
       auth.signOut();
+    }
+  });
+
+  // ---- Delete Account ----
+  deleteAccountBtn.addEventListener('click', () => {
+    deleteAccountError.textContent = '';
+    deleteAccountPassword.value = '';
+    const user = auth.currentUser;
+    const isPasswordAccount = !!user && user.providerData.some((p) => p.providerId === 'password');
+    deleteAccountPasswordBlock.style.display = isPasswordAccount ? 'block' : 'none';
+    deleteAccountOverlay.classList.add('open');
+  });
+
+  function closeDeleteAccountOverlay() {
+    deleteAccountOverlay.classList.remove('open');
+    deleteAccountError.textContent = '';
+    deleteAccountPassword.value = '';
+  }
+  deleteAccountCancelBtn.addEventListener('click', closeDeleteAccountOverlay);
+  deleteAccountOverlay.addEventListener('click', (e) => {
+    if (e.target === deleteAccountOverlay) closeDeleteAccountOverlay();
+  });
+
+  deleteAccountConfirmBtn.addEventListener('click', async () => {
+    deleteAccountError.textContent = '';
+    const user = auth.currentUser;
+    if (!user) return;
+    const isPasswordAccount = user.providerData.some((p) => p.providerId === 'password');
+
+    deleteAccountConfirmBtn.disabled = true;
+    try {
+      // Deleting an account requires a recent sign-in, so re-authenticate
+      // first using whichever method this account actually signed in with.
+      if (isPasswordAccount) {
+        const password = deleteAccountPassword.value;
+        if (!password) {
+          deleteAccountError.textContent = 'Please enter your password to confirm.';
+          deleteAccountConfirmBtn.disabled = false;
+          return;
+        }
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+        await user.reauthenticateWithCredential(credential);
+      } else {
+        await user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+      }
+
+      // Cancel any pending debounced write and stop the live listener first -
+      // otherwise a write already scheduled from an edit made moments ago
+      // could land after the delete below and silently recreate the document.
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = null;
+      cloudSyncBlocked = true;
+      stopCloudListener();
+
+      const uid = user.uid;
+      await db.collection('users').doc(uid).delete();
+
+      // Clear this account's local cache too, so nothing lingers on-device.
+      ['tasksByDate', 'nextId', 'journalByDate', 'nextJournalId', 'customTags'].forEach((name) => {
+        localStorage.removeItem('oneTaskAtATime_' + name + '_' + uid);
+      });
+
+      closeDeleteAccountOverlay();
+      await user.delete(); // triggers onAuthStateChanged(null), returning to the login screen
+    } catch (err) {
+      deleteAccountConfirmBtn.disabled = false;
+      deleteAccountError.textContent = friendlyAuthError(err);
     }
   });
 
