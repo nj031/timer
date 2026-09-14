@@ -1979,9 +1979,14 @@
   // without hammering Firestore on every keystroke/tick.
   function scheduleCloudSync() {
     if (!currentUid) return;
+    const uid = currentUid; // captured now, not read again when the timer fires below -
+                             // otherwise a fast logout/account-switch inside this window
+                             // would write the previous account's in-memory data into
+                             // whichever account happens to be signed in 1.2s later.
     clearTimeout(cloudSyncTimer);
     cloudSyncTimer = setTimeout(() => {
-      db.collection('users').doc(currentUid).set({
+      if (currentUid !== uid) return; // account changed since this was scheduled - drop it
+      db.collection('users').doc(uid).set({
         tasksByDate,
         nextId,
         journalByDate,
@@ -4726,6 +4731,8 @@
       initAppDataForUser(user.uid);
     } else {
       currentUid = null;
+      clearTimeout(cloudSyncTimer); // don't let a pending write from the account that just
+                                     // logged out land in whichever account signs in next
       showLoginScreen();
     }
   });
