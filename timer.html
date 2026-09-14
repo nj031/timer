@@ -5088,9 +5088,25 @@
     }
   });
 
-  // Registers the service worker so the app can work offline once installed
+  // Registers the service worker so the app can work offline once installed.
+  // Browsers only check for a newer sw.js on their own internal schedule,
+  // which for an installed app can be infrequent enough that a real update
+  // sits undetected for a long time - hence needing to manually clear
+  // storage to see new versions. Calling update() explicitly here (and
+  // again whenever the app comes back to the foreground) forces that check
+  // proactively every time, so simply closing and reopening the app should
+  // reliably pick up the latest version without a manual cache clear.
+  // (Not force-reloading the current session on top of this, on purpose -
+  // that could interrupt something like an in-progress, unsaved journal
+  // edit. The new version quietly takes over in the background and is
+  // ready the next time the app is opened fresh.)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((registration) => {
+      registration.update();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update();
+      });
+    }).catch(() => {});
   }
 </script>
 
