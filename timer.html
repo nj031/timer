@@ -1747,6 +1747,14 @@
   let currentUid = null;
   let cloudSyncTimer = null;
 
+  // Every local cache key is namespaced by the signed-in account's uid, so
+  // switching accounts on the same device (or a fresh sign-up) never sees
+  // a previous account's cached tasks/notes/tags as its own "local data to
+  // bring across" - each account's local cache is fully isolated.
+  function localKey(name) {
+    return 'oneTaskAtATime_' + name + '_' + currentUid;
+  }
+
   // Debounced push of all app data up to this user's cloud document.
   // Called after every local save so changes eventually reach the cloud
   // without hammering Firestore on every keystroke/tick.
@@ -2018,16 +2026,16 @@
 
   // Saves everything (all dates) to the phone so it survives closing the app
   function saveTasks() {
-    localStorage.setItem('oneTaskAtATime_tasksByDate', JSON.stringify(tasksByDate));
-    localStorage.setItem('oneTaskAtATime_nextId', String(nextId));
+    localStorage.setItem(localKey('tasksByDate'), JSON.stringify(tasksByDate));
+    localStorage.setItem(localKey('nextId'), String(nextId));
     scheduleCloudSync();
   }
 
   // Loads any previously saved tasks when the app opens, migrating the old
   // single-list format (from before dates existed) into "today" if found.
   function loadTasks() {
-    const savedByDate = localStorage.getItem('oneTaskAtATime_tasksByDate');
-    const savedNextId = localStorage.getItem('oneTaskAtATime_nextId');
+    const savedByDate = localStorage.getItem(localKey('tasksByDate'));
+    const savedNextId = localStorage.getItem(localKey('nextId'));
     const oldFlatTasks = localStorage.getItem('oneTaskAtATime_tasks');
 
     if (savedByDate) {
@@ -2037,14 +2045,21 @@
         tasksByDate = {};
       }
     } else if (oldFlatTasks) {
-      // Migrating from the pre-dates version of the app
+      // Migrating from the pre-dates, pre-accounts version of the app -
+      // a one-time move, so remove the old key once consumed. Otherwise
+      // it would keep re-appearing as "local data to bring across" for
+      // every other account that later signs in fresh on this device.
       try {
+        tasksByDate = {};
         tasksByDate[todayKey()] = JSON.parse(oldFlatTasks);
       } catch (e) {
         tasksByDate = {};
       }
+      localStorage.removeItem('oneTaskAtATime_tasks');
+    } else {
+      tasksByDate = {};
     }
-    if (savedNextId) nextId = Number(savedNextId);
+    nextId = savedNextId ? Number(savedNextId) : 1;
 
     processPostponements();
 
@@ -2065,19 +2080,19 @@
   let editingNoteId = null;     // which note is open in the editor (null = creating a new one)
 
   function saveJournal() {
-    localStorage.setItem('oneTaskAtATime_journalByDate', JSON.stringify(journalByDate));
-    localStorage.setItem('oneTaskAtATime_nextJournalId', String(nextJournalId));
+    localStorage.setItem(localKey('journalByDate'), JSON.stringify(journalByDate));
+    localStorage.setItem(localKey('nextJournalId'), String(nextJournalId));
     scheduleCloudSync();
   }
 
   function loadJournal() {
     try {
-      journalByDate = JSON.parse(localStorage.getItem('oneTaskAtATime_journalByDate')) || {};
+      journalByDate = JSON.parse(localStorage.getItem(localKey('journalByDate'))) || {};
     } catch (e) {
       journalByDate = {};
     }
-    const savedNextId = localStorage.getItem('oneTaskAtATime_nextJournalId');
-    if (savedNextId) nextJournalId = Number(savedNextId);
+    const savedNextId = localStorage.getItem(localKey('nextJournalId'));
+    nextJournalId = savedNextId ? Number(savedNextId) : 1;
   }
 
   // ---- Note status helpers (normal Journal vs Archive vs Recycle Bin) ----
@@ -2531,13 +2546,13 @@
   }
 
   function saveCustomTags() {
-    localStorage.setItem('oneTaskAtATime_customTags', JSON.stringify(customTags));
+    localStorage.setItem(localKey('customTags'), JSON.stringify(customTags));
     scheduleCloudSync();
   }
 
   function loadCustomTags() {
     try {
-      customTags = JSON.parse(localStorage.getItem('oneTaskAtATime_customTags')) || [];
+      customTags = JSON.parse(localStorage.getItem(localKey('customTags'))) || [];
     } catch (e) {
       customTags = [];
     }
