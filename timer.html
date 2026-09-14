@@ -2344,6 +2344,13 @@
     const savedByDate = localStorage.getItem(localKey('tasksByDate'));
     const savedNextId = localStorage.getItem(localKey('nextId'));
     const oldFlatTasks = localStorage.getItem('oneTaskAtATime_tasks');
+    // Data saved before per-account local keys existed (i.e. before the
+    // account-data-leak fix) sits under these old global, no-uid key names.
+    // Adopted only when this account has nothing of its own yet, and
+    // removed once consumed so it can't also leak into another account
+    // that signs in fresh on this device later.
+    const legacyByDate = localStorage.getItem('oneTaskAtATime_tasksByDate');
+    const legacyNextId = localStorage.getItem('oneTaskAtATime_nextId');
 
     if (savedByDate) {
       try {
@@ -2351,6 +2358,7 @@
       } catch (e) {
         tasksByDate = {};
       }
+      nextId = savedNextId ? Number(savedNextId) : 1;
     } else if (oldFlatTasks) {
       // Migrating from the pre-dates, pre-accounts version of the app -
       // a one-time move, so remove the old key once consumed. Otherwise
@@ -2362,11 +2370,21 @@
       } catch (e) {
         tasksByDate = {};
       }
+      nextId = savedNextId ? Number(savedNextId) : 1;
       localStorage.removeItem('oneTaskAtATime_tasks');
+    } else if (legacyByDate) {
+      try {
+        tasksByDate = JSON.parse(legacyByDate);
+      } catch (e) {
+        tasksByDate = {};
+      }
+      nextId = legacyNextId ? Number(legacyNextId) : 1;
+      localStorage.removeItem('oneTaskAtATime_tasksByDate');
+      localStorage.removeItem('oneTaskAtATime_nextId');
     } else {
       tasksByDate = {};
+      nextId = savedNextId ? Number(savedNextId) : 1;
     }
-    nextId = savedNextId ? Number(savedNextId) : 1;
 
     processPostponements();
 
@@ -2393,13 +2411,32 @@
   }
 
   function loadJournal() {
-    try {
-      journalByDate = JSON.parse(localStorage.getItem(localKey('journalByDate'))) || {};
-    } catch (e) {
+    const savedByDate = localStorage.getItem(localKey('journalByDate'));
+    // Pre-account-isolation data (see loadTasks() above for the full story).
+    const legacyByDate = localStorage.getItem('oneTaskAtATime_journalByDate');
+    const legacyNextId = localStorage.getItem('oneTaskAtATime_nextJournalId');
+
+    if (savedByDate) {
+      try {
+        journalByDate = JSON.parse(savedByDate) || {};
+      } catch (e) {
+        journalByDate = {};
+      }
+      const savedNextId = localStorage.getItem(localKey('nextJournalId'));
+      nextJournalId = savedNextId ? Number(savedNextId) : 1;
+    } else if (legacyByDate) {
+      try {
+        journalByDate = JSON.parse(legacyByDate) || {};
+      } catch (e) {
+        journalByDate = {};
+      }
+      nextJournalId = legacyNextId ? Number(legacyNextId) : 1;
+      localStorage.removeItem('oneTaskAtATime_journalByDate');
+      localStorage.removeItem('oneTaskAtATime_nextJournalId');
+    } else {
       journalByDate = {};
+      nextJournalId = 1;
     }
-    const savedNextId = localStorage.getItem(localKey('nextJournalId'));
-    nextJournalId = savedNextId ? Number(savedNextId) : 1;
   }
 
   // ---- Note status helpers (normal Journal vs Archive vs Recycle Bin) ----
@@ -2858,9 +2895,24 @@
   }
 
   function loadCustomTags() {
-    try {
-      customTags = JSON.parse(localStorage.getItem(localKey('customTags'))) || [];
-    } catch (e) {
+    const saved = localStorage.getItem(localKey('customTags'));
+    // Pre-account-isolation data (see loadTasks() above for the full story).
+    const legacy = localStorage.getItem('oneTaskAtATime_customTags');
+
+    if (saved) {
+      try {
+        customTags = JSON.parse(saved) || [];
+      } catch (e) {
+        customTags = [];
+      }
+    } else if (legacy) {
+      try {
+        customTags = JSON.parse(legacy) || [];
+      } catch (e) {
+        customTags = [];
+      }
+      localStorage.removeItem('oneTaskAtATime_customTags');
+    } else {
       customTags = [];
     }
   }
