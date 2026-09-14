@@ -4979,7 +4979,12 @@
         const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
         await user.reauthenticateWithCredential(credential);
       } else {
-        await user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        // Hints Google to go straight to (or at least prioritize) the
+        // account already signed into this app, instead of a full picker
+        // listing every Google account on the device.
+        googleProvider.setCustomParameters({ login_hint: user.email });
+        await user.reauthenticateWithPopup(googleProvider);
       }
 
       // Cancel any pending debounced write and stop the live listener first -
