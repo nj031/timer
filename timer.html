@@ -3676,6 +3676,23 @@
     updateActiveNotification(task, false);
   }
 
+  // If a timer was still actively running when this account's data was last
+  // saved (e.g. the app got fully closed while a timer was counting down),
+  // land straight back in Focus Mode for it instead of the task list. The
+  // timer's remaining time is already correct by this point via
+  // reconcileAllTimers() - this only restores which screen you were on.
+  function resumeActiveTimerIfAny() {
+    const running = tasks.find((t) => t.timerEndsAt != null);
+    if (!running) return;
+    activeTaskId = running.id;
+    showFocusView();
+    renderFocusSubtasks(running);
+    runInterval();
+    focusPauseBtn.textContent = 'Pause';
+    ensureNotificationPermission();
+    updateActiveNotification(running, false);
+  }
+
   // Builds the interactive subtask checklist shown in Focus Mode.
   // Only called when entering Focus Mode (not every timer tick), since
   // subtask state doesn't change on its own.
@@ -4897,6 +4914,7 @@
 
     render();
     updateDateBar();
+    resumeActiveTimerIfAny();
 
     loginLoadingEl.style.display = 'none';
     loginScreenEl.style.display = 'none';
