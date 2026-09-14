@@ -1165,8 +1165,29 @@
   }
 
   .drawer-item-logout {
-    margin-top: auto;
+    margin-top: 0;
     margin-bottom: 0;
+  }
+
+  .drawer-account-info {
+    padding: 4px 18px 14px;
+    margin-top: auto;
+  }
+
+  .drawer-account-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #9BADC4;
+    margin-bottom: 2px;
+  }
+
+  .drawer-account-email {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6B7C93;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .menu {
@@ -1637,6 +1658,10 @@
     </div>
     <button class="drawer-item" id="drawerJournalBtn">Journaling</button>
     <button class="drawer-item" id="drawerSettingsBtn">Settings</button>
+    <div class="drawer-account-info">
+      <div class="drawer-account-label">Logged in as</div>
+      <div class="drawer-account-email" id="drawerAccountEmail"></div>
+    </div>
     <button class="drawer-item drawer-item-logout" id="drawerLogoutBtn">Log out</button>
   </div>
 </div>
@@ -4602,6 +4627,8 @@
     if (user) {
       currentUid = user.uid;
       authViewStack = []; // leaving the auth flow - don't carry a stale checkpoint into the app
+      const drawerAccountEmail = document.getElementById('drawerAccountEmail');
+      if (drawerAccountEmail) drawerAccountEmail.textContent = user.email || '';
       initAppDataForUser(user.uid);
     } else {
       currentUid = null;
