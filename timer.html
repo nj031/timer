@@ -1136,6 +1136,25 @@
     transform: translateX(0);
   }
 
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 18px 24px;
+  }
+
+  .drawer-header-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  .drawer-header-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #17365D;
+  }
+
   .drawer-item {
     display: block;
     width: 100%;
@@ -1483,6 +1502,10 @@
 <!-- Hamburger side navigation drawer (Homepage only): Journaling / Settings -->
 <div class="drawer-overlay" id="drawerOverlay">
   <div class="drawer-panel">
+    <div class="drawer-header">
+      <img src="icon-192.png" alt="" class="drawer-header-icon">
+      <span class="drawer-header-title">One Task</span>
+    </div>
     <button class="drawer-item" id="drawerJournalBtn">Journaling</button>
     <button class="drawer-item" id="drawerSettingsBtn">Settings</button>
     <button class="drawer-item drawer-item-logout" id="drawerLogoutBtn">Log out</button>
