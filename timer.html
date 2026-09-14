@@ -1204,6 +1204,17 @@
     font-size: 1.1rem;
   }
 
+  /* Same card shape as the rest of the list, tinted to stand out. Both
+     colours are theme tokens, so it stays readable in light and dark. */
+  .settings-card.pro {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .settings-card.pro .settings-card-chevron {
+    color: var(--accent);
+  }
+
   /* --- Settings detail pages --- */
   .settings-option-list {
     display: flex;
@@ -1862,6 +1873,7 @@
     </div>
 
     <div class="settings-card-list">
+      <button class="settings-card pro" type="button" data-settings-page="pro">Upgrade to Pro<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" id="settingsSwitchAccountCard">Switch Account<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="appearance">Appearance<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="timer">Timer &amp; Focus<span class="settings-card-chevron">›</span></button>
@@ -1888,6 +1900,15 @@
     <div class="app-header">
       <button id="settingsSubBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
       <h1 id="settingsSubTitle">Settings</h1>
+    </div>
+
+    <!-- Placeholder only. Pro itself isn't built yet, so this says so rather
+         than showing plans or a purchase flow that doesn't exist. -->
+    <div id="settingsPagePro" style="display: none;">
+      <div class="settings-option-list">
+        <div class="settings-option is-coming-soon">One Task Pro<span class="settings-coming-soon">Coming Soon</span></div>
+      </div>
+      <div class="settings-hint">Pro isn't available yet. When it is, you'll be able to upgrade from here.</div>
     </div>
 
     <div class="settings-option-list" id="settingsPageAppearance" style="display: none;">
@@ -2483,6 +2504,7 @@
   const settingsSubView = document.getElementById('settingsSubView');
   const settingsSubBackBtn = document.getElementById('settingsSubBackBtn');
   const settingsSubTitle = document.getElementById('settingsSubTitle');
+  const settingsPagePro = document.getElementById('settingsPagePro');
   const settingsPageAppearance = document.getElementById('settingsPageAppearance');
   const settingsPageTimer = document.getElementById('settingsPageTimer');
   const settingsPageNotifications = document.getElementById('settingsPageNotifications');
@@ -5055,6 +5077,7 @@
   // following the same show/hide + history pattern as the other sub-screens.
   let settingsSubHistoryActive = false;
   const settingsPages = {
+    pro: { title: 'Upgrade to Pro', el: settingsPagePro },
     appearance: { title: 'Appearance', el: settingsPageAppearance },
     timer: { title: 'Timer & Focus', el: settingsPageTimer },
     notifications: { title: 'Notifications', el: settingsPageNotifications },
