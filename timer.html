@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Task at a Time</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B2A32">
+<meta name="theme-color" content="#F5F4F0">
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- Firebase (Authentication + Firestore) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -16,9 +16,9 @@
 
   body {
     min-height: 100vh;
-    background-color: #1B2A32;
+    background-color: #F5F4F0;
     font-family: system-ui, -apple-system, sans-serif;
-    color: #F2EFE9;
+    color: #1B2A32;
     display: flex;
     justify-content: center;
     padding: 24px 16px 60px;
@@ -32,23 +32,24 @@
   h1 {
     font-size: 1.3rem;
     font-weight: 600;
-    color: #9FD8CB;
+    color: #2F7D68;
     text-align: center;
     margin-bottom: 20px;
   }
 
   /* --- Active task / main timer card --- */
   .now-playing {
-    background-color: #22343C;
-    border-radius: 14px;
+    background-color: #FFFFFF;
+    border-radius: 18px;
     padding: 20px;
     text-align: center;
     margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
   }
 
   #activeName {
     font-size: 1rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     margin-bottom: 8px;
     min-height: 1.2em;
   }
@@ -58,7 +59,7 @@
     font-size: 0.78rem;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #9FD8CB;
+    color: #2F7D68;
     text-align: center;
     margin-bottom: 6px;
   }
@@ -66,7 +67,7 @@
   #focusName {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #F2EFE9;
+    color: #1B2A32;
     text-align: center;
     margin-bottom: 22px;
   }
@@ -86,19 +87,19 @@
 
   .ring-track {
     fill: none;
-    stroke: #3A4C55;
+    stroke: #D8D9D2;
     stroke-width: 10;
   }
 
   .ring-progress {
     fill: none;
-    stroke: #9FD8CB;
+    stroke: #2F7D68;
     stroke-width: 10;
     stroke-linecap: round;
   }
 
   .ring-dot {
-    fill: #9FD8CB;
+    fill: #2F7D68;
   }
 
   .ring-center {
@@ -119,7 +120,7 @@
 
   .ring-total {
     font-size: 0.8rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     margin-top: 4px;
   }
 
@@ -148,7 +149,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 2px solid #9FD8CB;
+    border: 2px solid #2F7D68;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -163,19 +164,19 @@
 
   .focus-subtask-item.completed .focus-subtask-name {
     text-decoration: line-through;
-    color: #C7D6D2;
+    color: #5B6B70;
   }
 
   .focus-subtask-name {
     font-size: 1.05rem;
-    color: #F2EFE9;
+    color: #1B2A32;
   }
 
   /* --- Subtasks (Task List - read-only preview) --- */
   .subtasks-toggle-btn {
     background: none;
     border: none;
-    color: #9FD8CB;
+    color: #2F7D68;
     font-size: 0.78rem;
     padding: 0;
     cursor: pointer;
@@ -195,14 +196,14 @@
     align-items: center;
     gap: 8px;
     font-size: 0.82rem;
-    color: #C7D6D2;
+    color: #5B6B70;
   }
 
   .task-subtasks-preview .preview-checkbox {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 1.5px solid #6B7F87;
+    border: 1.5px solid #8A9A9E;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -211,7 +212,7 @@
   }
 
   .task-subtasks-preview li.completed .preview-checkbox {
-    background-color: #6B7F87;
+    background-color: #8A9A9E;
     color: #22343C;
   }
 
@@ -223,7 +224,7 @@
   .task-section-header {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #9FD8CB;
+    color: #2F7D68;
     margin: 14px 0 8px;
   }
 
@@ -242,8 +243,8 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.85rem;
     cursor: pointer;
     margin-bottom: 4px;
@@ -274,7 +275,7 @@
   /* --- Break confirmation modal subtext --- */
   .menu-subtext {
     font-size: 0.85rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     text-align: center;
     margin-top: -4px;
     margin-bottom: 6px;
@@ -314,7 +315,7 @@
     cursor: pointer;
   }
 
-  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #3A4C55; color: #F2EFE9; }
+  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #ECEDE7; color: #1B2A32; }
 
   .controls button:disabled {
     opacity: 0.4;
@@ -339,7 +340,7 @@
   /* --- Add Task modal --- */
   .modal-label {
     font-size: 0.8rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     text-align: left;
     margin-bottom: -6px;
   }
@@ -355,8 +356,8 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -374,8 +375,8 @@
     padding: 10px 0;
     border: none;
     border-radius: 8px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.9rem;
     cursor: pointer;
   }
@@ -428,8 +429,8 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -442,7 +443,7 @@
 
   .chosen-date-preview {
     font-size: 0.8rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     text-align: center;
     margin-top: -4px;
   }
@@ -459,8 +460,8 @@
     padding: 8px 4px;
     border: none;
     border-radius: 8px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.8rem;
     cursor: pointer;
   }
@@ -488,8 +489,8 @@
     padding: 7px 0;
     border: none;
     border-radius: 8px;
-    background-color: #22343C;
-    color: #F2EFE9;
+    background-color: #FFFFFF;
+    color: #1B2A32;
     font-size: 0.78rem;
     cursor: pointer;
   }
@@ -511,8 +512,8 @@
     height: 32px;
     border-radius: 50%;
     border: none;
-    background-color: #22343C;
-    color: #F2EFE9;
+    background-color: #FFFFFF;
+    color: #1B2A32;
     font-size: 0.8rem;
     cursor: pointer;
   }
@@ -534,8 +535,8 @@
     padding: 6px 12px;
     border: none;
     border-radius: 20px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     font-size: 0.8rem;
     cursor: pointer;
   }
@@ -580,7 +581,7 @@
   .toggle-track {
     position: absolute;
     inset: 0;
-    background-color: #3A4C55;
+    background-color: #ECEDE7;
     border-radius: 24px;
     cursor: pointer;
     transition: background-color 0.15s;
@@ -616,11 +617,12 @@
   }
 
   .task {
-    background-color: #22343C;
-    border-radius: 12px;
+    background-color: #FFFFFF;
+    border-radius: 16px;
     padding: 14px;
     cursor: pointer;
     border: 2px solid transparent;
+    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -634,7 +636,7 @@
   .drag-handle {
     font-size: 1.3rem;
     line-height: 1;
-    color: #6B7F87;
+    color: #8A9A9E;
     padding: 10px 8px;
     margin: -10px -8px;
     cursor: grab;
@@ -653,7 +655,7 @@
   }
 
   .task.active {
-    border-color: #9FD8CB;
+    border-color: #2F7D68;
   }
 
   .task.completed {
@@ -676,8 +678,8 @@
     font-size: 0.7rem;
     padding: 2px 9px;
     border-radius: 20px;
-    border: 1px solid #9FD8CB;
-    color: #9FD8CB;
+    border: 1px solid #2F7D68;
+    color: #2F7D68;
     background: none;
     white-space: nowrap;
   }
@@ -693,7 +695,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 2px solid #9FD8CB;
+    border: 2px solid #2F7D68;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -713,7 +715,7 @@
 
   .task-duration {
     font-size: 0.85rem;
-    color: #C7D6D2;
+    color: #5B6B70;
   }
 
   .task-bottom {
@@ -726,7 +728,7 @@
     font-size: 0.75rem;
     padding: 3px 8px;
     border-radius: 20px;
-    background-color: #3A4C55;
+    background-color: #ECEDE7;
   }
 
   .status.in-progress { background-color: #C78A3A; color: #1B2A32; }
@@ -740,7 +742,7 @@
   .task-actions button {
     border: none;
     background: none;
-    color: #C7D6D2;
+    color: #5B6B70;
     font-size: 0.85rem;
     cursor: pointer;
     padding: 4px 6px;
@@ -772,7 +774,7 @@
   }
 
   .note-menu-btn {
-    color: #9FD8CB;
+    color: #2F7D68;
     font-size: 2rem;
     font-weight: 800;
   }
@@ -787,7 +789,19 @@
     right: auto;
     font-size: 1.8rem;
     font-weight: 800;
-    color: #9FD8CB;
+    color: #2F7D68;
+    padding: 10px 14px;
+  }
+
+  .hamburger-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
     padding: 10px 14px;
   }
 
@@ -795,7 +809,7 @@
     text-align: center;
     font-size: 1rem;
     font-weight: 600;
-    color: #F2EFE9;
+    color: #1B2A32;
     margin-bottom: 18px;
   }
 
@@ -807,10 +821,11 @@
   }
 
   .journal-note-card {
-    background-color: #22343C;
-    border-radius: 12px;
+    background-color: #FFFFFF;
+    border-radius: 16px;
     padding: 14px;
     cursor: pointer;
+    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
     /* Long-press opens an action menu - this stops the OS text-selection
        bubble from popping up mid-press and hijacking the gesture. */
     user-select: none;
@@ -820,7 +835,7 @@
   .journal-note-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #F2EFE9;
+    color: #1B2A32;
     margin-bottom: 4px;
   }
 
@@ -834,7 +849,7 @@
     flex: 1;
     min-width: 0;
     font-size: 0.85rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -843,7 +858,7 @@
   .journal-note-time {
     flex-shrink: 0;
     font-size: 0.72rem;
-    color: #6B7F87;
+    color: #8A9A9E;
   }
 
   .fab-btn {
@@ -879,11 +894,11 @@
     font-family: inherit;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #F2EFE9;
+    color: #1B2A32;
   }
 
   .note-title-input::placeholder {
-    color: #6B7F87;
+    color: #8A9A9E;
   }
 
   .note-content-input {
@@ -899,7 +914,7 @@
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.6;
-    color: #F2EFE9;
+    color: #1B2A32;
     /* Some mobile WebViews still draw their native multiline-text-field
        chrome (an inset edge + scrollbar track) even with border:none -
        this strips that so the writing area has no visible edge. */
@@ -914,7 +929,7 @@
   }
 
   .note-content-input::placeholder {
-    color: #6B7F87;
+    color: #8A9A9E;
   }
 
   /* Small dot on calendar days that already have at least one journal note */
@@ -945,7 +960,7 @@
   .date-nav-btn {
     background: none;
     border: none;
-    color: #9FD8CB;
+    color: #2F7D68;
     font-size: 1.4rem;
     line-height: 1;
     padding: 4px 10px;
@@ -960,17 +975,17 @@
   #dateLabelMain {
     font-size: 1rem;
     font-weight: 600;
-    color: #F2EFE9;
+    color: #1B2A32;
   }
 
   .date-label-sub {
     font-size: 0.78rem;
-    color: #C7D6D2;
+    color: #5B6B70;
   }
 
   .today-btn {
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     border: none;
     border-radius: 8px;
     padding: 5px 10px;
@@ -981,7 +996,7 @@
   .progress-label {
     text-align: center;
     font-size: 0.85rem;
-    color: #9FD8CB;
+    color: #2F7D68;
     margin-bottom: 16px;
   }
 
@@ -1005,7 +1020,7 @@
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
     font-size: 0.75rem;
-    color: #C7D6D2;
+    color: #5B6B70;
     margin-top: 4px;
   }
 
@@ -1018,7 +1033,7 @@
   .calendar-day {
     background: none;
     border: none;
-    color: #F2EFE9;
+    color: #1B2A32;
     padding: 8px 0;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -1026,11 +1041,11 @@
   }
 
   .calendar-day:hover {
-    background-color: #3A4C55;
+    background-color: #ECEDE7;
   }
 
   .calendar-day.today {
-    border: 1px solid #9FD8CB;
+    border: 1px solid #2F7D68;
   }
 
   .calendar-day.selected {
@@ -1048,7 +1063,7 @@
   }
 
   .calendar-day.disabled-day {
-    color: #4A5A61;
+    color: #C6C8C1;
     cursor: not-allowed;
     opacity: 0.5;
   }
@@ -1059,7 +1074,7 @@
 
   .empty-msg {
     text-align: center;
-    color: #C7D6D2;
+    color: #5B6B70;
     font-size: 0.9rem;
     padding: 20px 0;
   }
@@ -1079,8 +1094,60 @@
     display: flex;
   }
 
+  /* --- Hamburger side navigation drawer (Homepage only) --- */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    transition: background-color 0.22s ease;
+    z-index: 20;
+  }
+
+  .drawer-overlay.open {
+    background-color: rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+  }
+
+  .drawer-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 78%;
+    max-width: 300px;
+    background-color: #FFFFFF;
+    box-shadow: 2px 0 12px rgba(27, 42, 50, 0.12);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    padding: 28px 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .drawer-overlay.open .drawer-panel {
+    transform: translateX(0);
+  }
+
+  .drawer-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 16px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1B2A32;
+    cursor: pointer;
+  }
+
+  .drawer-item:active {
+    background-color: #ECEDE7;
+  }
+
   .menu {
-    background-color: #22343C;
+    background-color: #FFFFFF;
     width: 100%;
     max-width: 420px;
     border-radius: 16px 16px 0 0;
@@ -1094,7 +1161,7 @@
     font-size: 1.05rem;
     font-weight: 600;
     text-align: center;
-    color: #9FD8CB;
+    color: #2F7D68;
     margin-bottom: 6px;
     word-break: break-word;
   }
@@ -1105,8 +1172,8 @@
     font-weight: 600;
     border: none;
     border-radius: 10px;
-    background-color: #3A4C55;
-    color: #F2EFE9;
+    background-color: #ECEDE7;
+    color: #1B2A32;
     cursor: pointer;
   }
 
@@ -1117,7 +1184,7 @@
 
   .menu-btn.cancel {
     background-color: transparent;
-    color: #C7D6D2;
+    color: #5B6B70;
   }
 
   /* Positioned in the Note Editor's header (see .calendar-btn for the
@@ -1137,7 +1204,7 @@
   #loginScreen {
     position: fixed;
     inset: 0;
-    background-color: #1B2A32;
+    background-color: #F5F4F0;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1148,21 +1215,22 @@
   .login-box {
     width: 100%;
     max-width: 360px;
-    background-color: #22343C;
+    background-color: #FFFFFF;
     border-radius: 16px;
     padding: 28px 24px;
+    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
   }
 
   .login-box h1 {
     font-size: 1.4rem;
-    color: #9FD8CB;
+    color: #2F7D68;
     text-align: center;
     margin-bottom: 4px;
   }
 
   .login-box .login-sub {
     font-size: 0.85rem;
-    color: #8AA0A8;
+    color: #5B6B70;
     text-align: center;
     margin-bottom: 22px;
   }
@@ -1172,9 +1240,9 @@
     padding: 12px 14px;
     margin-bottom: 12px;
     border-radius: 10px;
-    border: 1px solid #3A4C55;
-    background-color: #1B2A32;
-    color: #F2EFE9;
+    border: 1px solid #D8D9D2;
+    background-color: #FFFFFF;
+    color: #1B2A32;
     font-size: 0.95rem;
   }
 
@@ -1198,8 +1266,8 @@
 
   .login-btn-secondary {
     background-color: transparent;
-    color: #9FD8CB;
-    border: 1px solid #3A4C55;
+    color: #2F7D68;
+    border: 1px solid #D8D9D2;
   }
 
   .login-btn-google {
@@ -1224,7 +1292,7 @@
 
   #loginLoading {
     text-align: center;
-    color: #9FD8CB;
+    color: #2F7D68;
     font-size: 0.85rem;
     margin-top: 10px;
     display: none;
@@ -1235,7 +1303,7 @@
     border: none;
     font-size: 1.3rem;
     cursor: pointer;
-    color: #F2EFE9;
+    color: #1B2A32;
     padding: 4px 8px;
   }
 </style>
@@ -1266,9 +1334,9 @@
 
 <div class="app" id="appRoot" style="display:none;">
   <div class="app-header" id="mainAppHeader">
+    <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">☰</button>
     <h1>Focus Timer</h1>
     <button id="logoutBtn" class="logout-btn" aria-label="Log out">🚪</button>
-    <button id="journalBtn" class="calendar-btn journal-btn" aria-label="Open journal">📓</button>
     <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
   </div>
 
@@ -1360,6 +1428,15 @@
     </div>
     <div class="journal-notes-list" id="binNotesList"></div>
   </div>
+
+  <!-- SETTINGS VIEW: basic placeholder page, reachable from the hamburger drawer -->
+  <div id="settingsView" style="display: none;">
+    <div class="app-header">
+      <button id="settingsBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1>Settings</h1>
+    </div>
+    <div class="empty-msg">More settings coming soon.</div>
+  </div>
 </div>
 
 <!-- Long-press action menu for a Journal note card -->
@@ -1406,6 +1483,14 @@
     <button class="menu-btn" id="openArchiveBtn">🗄 Archive</button>
     <button class="menu-btn" id="openBinBtn">🗑 Recycle Bin</button>
     <button class="menu-btn cancel" id="journalMenuCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Hamburger side navigation drawer (Homepage only): Journaling / Settings -->
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer-panel">
+    <button class="drawer-item" id="drawerJournalBtn">Journaling</button>
+    <button class="drawer-item" id="drawerSettingsBtn">Settings</button>
   </div>
 </div>
 
@@ -1678,7 +1763,12 @@
   const focusView = document.getElementById('focusView');
   const mainAppHeader = document.getElementById('mainAppHeader');
   const logoutBtn = document.getElementById('logoutBtn');
-  const journalBtn = document.getElementById('journalBtn');
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const drawerJournalBtn = document.getElementById('drawerJournalBtn');
+  const drawerSettingsBtn = document.getElementById('drawerSettingsBtn');
+  const settingsView = document.getElementById('settingsView');
+  const settingsBackBtn = document.getElementById('settingsBackBtn');
   const journalView = document.getElementById('journalView');
   const journalBackBtn = document.getElementById('journalBackBtn');
   const journalMenuBtn = document.getElementById('journalMenuBtn');
@@ -2673,16 +2763,17 @@
   // Intercepts the system/browser Back button. If we're in Focus Mode,
   // treat it exactly like pressing the Break button instead of closing
   // the app and silently killing the timer.
-  // Note/Journal menus and confirmation popups (long-press action menu,
-  // Delete/Permanently-Delete confirms, Archive/Bin item menu, Journal's
-  // header menu) aren't given their own history checkpoint - they sit on
-  // top of whatever view opened them. So Back must close the topmost one
-  // of these FIRST, before any of the view-level checks below run, or
-  // Back would navigate the view underneath while leaving the popup
-  // visibly stuck open on top of it.
-  const noteScopedOverlays = [
+  // Note/Journal menus, confirmation popups, and the hamburger drawer
+  // (long-press action menu, Delete/Permanently-Delete confirms,
+  // Archive/Bin item menu, Journal's header menu, the side drawer) aren't
+  // given their own history checkpoint - they sit on top of whatever view
+  // opened them. So Back must close the topmost one of these FIRST,
+  // before any of the view-level checks below run, or Back would
+  // navigate the view underneath while leaving the popup/drawer visibly
+  // stuck open on top of it.
+  const scopedOverlays = [
     noteOptionsOverlay, noteDeleteOverlay, archivedActionOverlay,
-    permanentDeleteOverlay, journalMenuOverlay
+    permanentDeleteOverlay, journalMenuOverlay, drawerOverlay
   ];
 
   window.addEventListener('popstate', () => {
@@ -2693,7 +2784,7 @@
       ignoreNextPopstate = false;
       return;
     }
-    const openOverlay = noteScopedOverlays.find((el) => el.classList.contains('open'));
+    const openOverlay = scopedOverlays.find((el) => el.classList.contains('open'));
     if (openOverlay) {
       // Cancel the pop - it only closes this overlay, the view beneath stays put.
       history.pushState({}, '');
@@ -2723,6 +2814,9 @@
     } else if (binHistoryActive && binView.style.display !== 'none') {
       binHistoryActive = false;
       hideBinView();
+    } else if (settingsHistoryActive && settingsView.style.display !== 'none') {
+      settingsHistoryActive = false;
+      hideSettingsView();
     } else if (journalHistoryActive && journalView.style.display !== 'none') {
       journalHistoryActive = false;
       hideJournalView();
@@ -3986,12 +4080,52 @@
     renderCalendar();
   });
 
-  // ---- Journal button wiring ----
-  journalBtn.addEventListener('click', () => {
+  // ---- Hamburger drawer (Homepage only): Journaling / Settings ----
+  hamburgerBtn.addEventListener('click', () => {
+    drawerOverlay.classList.add('open');
+  });
+  drawerOverlay.addEventListener('click', (e) => {
+    if (e.target === drawerOverlay) drawerOverlay.classList.remove('open');
+  });
+  drawerJournalBtn.addEventListener('click', () => {
+    drawerOverlay.classList.remove('open');
     journalSelectedDateKey = todayKey(); // Journal always opens on Today from the Homepage
     showJournalView();
     renderJournalView();
     pushJournalHistory();
+  });
+  drawerSettingsBtn.addEventListener('click', () => {
+    drawerOverlay.classList.remove('open');
+    showSettingsView();
+  });
+
+  // ---- Settings view (basic placeholder page) ----
+  let settingsHistoryActive = false;
+
+  function showSettingsView() {
+    mainAppHeader.style.display = 'none';
+    listView.style.display = 'none';
+    focusView.style.display = 'none';
+    settingsView.style.display = 'block';
+    if (!settingsHistoryActive) {
+      try { history.pushState({ view: 'settings' }, ''); settingsHistoryActive = true; } catch (e) { /* see note above */ }
+    }
+  }
+  function hideSettingsView() {
+    settingsView.style.display = 'none';
+    mainAppHeader.style.display = 'flex';
+    listView.style.display = 'block';
+  }
+  function popSettingsHistory() {
+    if (settingsHistoryActive) {
+      settingsHistoryActive = false;
+      ignoreNextPopstate = true;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
+  }
+  settingsBackBtn.addEventListener('click', () => {
+    hideSettingsView();
+    popSettingsHistory();
   });
 
   journalBackBtn.addEventListener('click', () => {
@@ -4033,6 +4167,7 @@
       noteEditView.style.display = 'none';
       archiveView.style.display = 'none';
       binView.style.display = 'none';
+      settingsView.style.display = 'none';
       addNoteFab.style.display = 'none';
       focusView.style.display = 'none';
       mainAppHeader.style.display = 'flex';
@@ -4042,8 +4177,9 @@
       noteHistoryActive = false;
       archiveHistoryActive = false;
       binHistoryActive = false;
+      settingsHistoryActive = false;
       focusHistoryActive = false;
-      noteScopedOverlays.forEach((el) => el.classList.remove('open'));
+      scopedOverlays.forEach((el) => el.classList.remove('open'));
       longPressNoteCtx = null;
       secondaryNoteCtx = null;
       render();
