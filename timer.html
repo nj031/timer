@@ -1,24 +1,78 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color:#F4F8FC;">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Task at a Time</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F4F8FC">
+<meta name="theme-color" content="#F4F8FC" id="themeColorMeta">
 <link rel="apple-touch-icon" href="icon-192.png">
-<!-- Firebase (Authentication + Firestore) -->
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<!-- Resolves the saved theme before anything is painted, so the app never
+     flashes the wrong colour on open. Runs first, and deliberately ahead of
+     the render-blocking Firebase scripts, for the same reason. -->
+<script>
+(function () {
+  var dark = false;
+  try {
+    var saved = JSON.parse(localStorage.getItem('oneTaskAtATime_prefs') || '{}');
+    var theme = saved.theme || 'system';
+    dark = theme === 'dark' || (theme === 'system'
+      && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch (e) { /* no saved preference readable - fall back to light */ }
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.documentElement.style.backgroundColor = dark ? '#0F1722' : '#F4F8FC';
+  var meta = document.getElementById('themeColorMeta');
+  if (meta) meta.setAttribute('content', dark ? '#0F1722' : '#F4F8FC');
+})();
+</script>
 <style>
+  /* Light theme. These are the app's original colours - the light theme is
+     unchanged, it just reads its values from here now. */
+  :root {
+    --bg: #F4F8FC;
+    --surface: #FFFFFF;
+    --text: #17365D;
+    --text-muted: #6B7C93;
+    --text-faint: #9BADC4;
+    --text-placeholder: #B9C6D6;
+    --accent: #2F6FD6;
+    --accent-soft: #DCEBFA;
+    --btn: #E4EDF6;
+    --border: #D5E1EE;
+    --danger: #C75A4A;
+    --danger-text: #E08A8A;
+    --shadow-color: rgba(23, 54, 93, 0.08);
+    --shadow-color-strong: rgba(23, 54, 93, 0.12);
+  }
+
+  /* Dark theme. Same layout, spacing and shapes - only the palette changes,
+     keeping the blue-tinted character of the light theme. */
+  :root[data-theme="dark"] {
+    --bg: #0F1722;
+    --surface: #18222F;
+    --text: #E8EEF6;
+    --text-muted: #9FB0C4;
+    --text-faint: #7C8CA1;
+    --text-placeholder: #5A6B80;
+    --accent: #6BA4F5;
+    --accent-soft: #1E3A5F;
+    --btn: #233246;
+    --border: #2C3B4F;
+    --danger: #C75A4A;
+    --danger-text: #E08A8A;
+    --shadow-color: rgba(0, 0, 0, 0.35);
+    --shadow-color-strong: rgba(0, 0, 0, 0.45);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { background-color: var(--bg); }
 
   body {
     min-height: 100vh;
-    background-color: #F4F8FC;
+    background-color: var(--bg);
     font-family: system-ui, -apple-system, sans-serif;
-    color: #17365D;
+    color: var(--text);
     display: flex;
     justify-content: center;
     padding: 24px 16px 60px;
@@ -32,24 +86,24 @@
   h1 {
     font-size: 1.3rem;
     font-weight: 600;
-    color: #2F6FD6;
+    color: var(--accent);
     text-align: center;
     margin-bottom: 20px;
   }
 
   /* --- Active task / main timer card --- */
   .now-playing {
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     border-radius: 18px;
     padding: 20px;
     text-align: center;
     margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
+    box-shadow: 0 1px 4px var(--shadow-color);
   }
 
   #activeName {
     font-size: 1rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     margin-bottom: 8px;
     min-height: 1.2em;
   }
@@ -59,7 +113,7 @@
     font-size: 0.78rem;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #2F6FD6;
+    color: var(--accent);
     text-align: center;
     margin-bottom: 6px;
   }
@@ -67,7 +121,7 @@
   #focusName {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #17365D;
+    color: var(--text);
     text-align: center;
     margin-bottom: 22px;
   }
@@ -87,19 +141,19 @@
 
   .ring-track {
     fill: none;
-    stroke: #D5E1EE;
+    stroke: var(--border);
     stroke-width: 10;
   }
 
   .ring-progress {
     fill: none;
-    stroke: #2F6FD6;
+    stroke: var(--accent);
     stroke-width: 10;
     stroke-linecap: round;
   }
 
   .ring-dot {
-    fill: #2F6FD6;
+    fill: var(--accent);
   }
 
   .ring-center {
@@ -120,7 +174,7 @@
 
   .ring-total {
     font-size: 0.8rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     margin-top: 4px;
   }
 
@@ -149,34 +203,34 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 2px solid #2F6FD6;
+    border: 2px solid var(--accent);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
-    color: #17365D;
+    color: var(--text);
   }
 
   .focus-subtask-item.completed .focus-subtask-checkbox {
-    background-color: #DCEBFA;
+    background-color: var(--accent-soft);
   }
 
   .focus-subtask-item.completed .focus-subtask-name {
     text-decoration: line-through;
-    color: #6B7C93;
+    color: var(--text-muted);
   }
 
   .focus-subtask-name {
     font-size: 1.05rem;
-    color: #17365D;
+    color: var(--text);
   }
 
   /* --- Subtasks (Task List - read-only preview) --- */
   .subtasks-toggle-btn {
     background: none;
     border: none;
-    color: #2F6FD6;
+    color: var(--accent);
     font-size: 0.78rem;
     padding: 0;
     cursor: pointer;
@@ -196,14 +250,14 @@
     align-items: center;
     gap: 8px;
     font-size: 0.82rem;
-    color: #6B7C93;
+    color: var(--text-muted);
   }
 
   .task-subtasks-preview .preview-checkbox {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 1.5px solid #9BADC4;
+    border: 1.5px solid var(--text-faint);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -212,8 +266,8 @@
   }
 
   .task-subtasks-preview li.completed .preview-checkbox {
-    background-color: #9BADC4;
-    color: #17365D;
+    background-color: var(--text-faint);
+    color: var(--text);
   }
 
   .task-subtasks-preview li.completed .subtask-preview-name {
@@ -224,7 +278,7 @@
   .task-section-header {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #2F6FD6;
+    color: var(--accent);
     margin: 14px 0 8px;
   }
 
@@ -243,8 +297,8 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.85rem;
     cursor: pointer;
     margin-bottom: 4px;
@@ -264,7 +318,7 @@
   .subtask-remove-btn {
     background: none;
     border: none;
-    color: #6B7C93;
+    color: var(--text-muted);
     font-size: 1.1rem;
     line-height: 1;
     padding: 4px 8px;
@@ -275,7 +329,7 @@
   /* --- Break confirmation modal subtext --- */
   .menu-subtext {
     font-size: 0.85rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     text-align: center;
     margin-top: -4px;
     margin-bottom: 6px;
@@ -284,11 +338,11 @@
   /* --- Inputs inside Edit modal --- */
   .modal-input {
     padding: 12px;
-    border: 1px solid #D5E1EE;
-    background-color: #E4EDF6;
+    border: 1px solid var(--border);
+    background-color: var(--btn);
     border-radius: 8px;
     font-size: 0.95rem;
-    color: #17365D;
+    color: var(--text);
     width: 100%;
   }
 
@@ -316,7 +370,7 @@
     cursor: pointer;
   }
 
-  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #E4EDF6; color: #17365D; }
+  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: var(--btn); color: var(--text); }
 
   .controls button:disabled {
     opacity: 0.4;
@@ -331,8 +385,8 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 10px;
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
@@ -341,7 +395,7 @@
   /* --- Add Task modal --- */
   .modal-label {
     font-size: 0.8rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     text-align: left;
     margin-bottom: -6px;
   }
@@ -357,15 +411,15 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.85rem;
     cursor: pointer;
   }
 
   .quick-duration-btn.selected, .edit-quick-duration-btn.selected, .timer-picker-btn.selected, .edit-timer-picker-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -376,8 +430,8 @@
     padding: 10px 0;
     border: none;
     border-radius: 8px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.9rem;
     cursor: pointer;
   }
@@ -392,8 +446,8 @@
     padding: 10px 0;
     border: none;
     border-radius: 8px;
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
@@ -404,7 +458,7 @@
     border: none;
     border-radius: 8px;
     background: none;
-    color: #6B7C93;
+    color: var(--text-muted);
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -430,21 +484,21 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.85rem;
     cursor: pointer;
   }
 
   .date-option-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
   .chosen-date-preview {
     font-size: 0.8rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     text-align: center;
     margin-top: -4px;
   }
@@ -461,15 +515,15 @@
     padding: 8px 4px;
     border: none;
     border-radius: 8px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .repeat-type-btn.selected, .edit-repeat-type-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -490,15 +544,15 @@
     padding: 7px 0;
     border: none;
     border-radius: 8px;
-    background-color: #FFFFFF;
-    color: #17365D;
+    background-color: var(--surface);
+    color: var(--text);
     font-size: 0.78rem;
     cursor: pointer;
   }
 
   .repeat-custom-mode-btn.selected, .edit-repeat-custom-mode-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -513,15 +567,15 @@
     height: 32px;
     border-radius: 50%;
     border: none;
-    background-color: #FFFFFF;
-    color: #17365D;
+    background-color: var(--surface);
+    color: var(--text);
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .repeat-weekday-btn.selected, .edit-repeat-weekday-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -536,15 +590,15 @@
     padding: 6px 12px;
     border: none;
     border-radius: 20px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .tag-btn.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -582,7 +636,7 @@
   .toggle-track {
     position: absolute;
     inset: 0;
-    background-color: #E4EDF6;
+    background-color: var(--btn);
     border-radius: 24px;
     cursor: pointer;
     transition: background-color 0.15s;
@@ -595,18 +649,18 @@
     height: 18px;
     left: 3px;
     top: 3px;
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     border-radius: 50%;
     transition: transform 0.15s;
   }
 
   .toggle-switch input:checked + .toggle-track {
-    background-color: #DCEBFA;
+    background-color: var(--accent-soft);
   }
 
   .toggle-switch input:checked + .toggle-track::before {
     transform: translateX(20px);
-    background-color: #17365D;
+    background-color: var(--text);
   }
 
   /* --- Task list --- */
@@ -618,12 +672,12 @@
   }
 
   .task {
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     border-radius: 16px;
     padding: 14px;
     cursor: pointer;
     border: 2px solid transparent;
-    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
+    box-shadow: 0 1px 4px var(--shadow-color);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -637,7 +691,7 @@
   .drag-handle {
     font-size: 1.3rem;
     line-height: 1;
-    color: #9BADC4;
+    color: var(--text-faint);
     padding: 10px 8px;
     margin: -10px -8px;
     cursor: grab;
@@ -656,7 +710,7 @@
   }
 
   .task.active {
-    border-color: #2F6FD6;
+    border-color: var(--accent);
   }
 
   .task.completed {
@@ -679,8 +733,8 @@
     font-size: 0.7rem;
     padding: 2px 9px;
     border-radius: 20px;
-    border: 1px solid #2F6FD6;
-    color: #2F6FD6;
+    border: 1px solid var(--accent);
+    color: var(--accent);
     background: none;
     white-space: nowrap;
   }
@@ -696,18 +750,18 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 2px solid #2F6FD6;
+    border: 2px solid var(--accent);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    color: #17365D;
+    color: var(--text);
     cursor: pointer;
   }
 
   .task.completed .main-task-checkbox {
-    background-color: #DCEBFA;
+    background-color: var(--accent-soft);
   }
 
   .task-subtasks-preview li.clickable {
@@ -716,7 +770,7 @@
 
   .task-duration {
     font-size: 0.85rem;
-    color: #6B7C93;
+    color: var(--text-muted);
   }
 
   .task-bottom {
@@ -729,11 +783,11 @@
     font-size: 0.75rem;
     padding: 3px 8px;
     border-radius: 20px;
-    background-color: #E4EDF6;
+    background-color: var(--btn);
   }
 
-  .status.in-progress { background-color: #DCEBFA; color: #2F6FD6; }
-  .status.completed { background-color: #2F6FD6; color: #FFFFFF; }
+  .status.in-progress { background-color: var(--accent-soft); color: var(--accent); }
+  .status.completed { background-color: var(--accent); color: var(--surface); }
 
   .task-actions {
     display: flex;
@@ -743,7 +797,7 @@
   .task-actions button {
     border: none;
     background: none;
-    color: #6B7C93;
+    color: var(--text-muted);
     font-size: 0.85rem;
     cursor: pointer;
     padding: 4px 6px;
@@ -780,13 +834,20 @@
     height: auto;
   }
 
+  /* The calendar icon is a blue glyph on a light background, which reads as a
+     bright white block in dark mode. Inverting lightness and rotating the hue
+     back keeps it blue while letting it sit on the dark surface. */
+  :root[data-theme="dark"] .calendar-btn-icon {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
   .journal-back-btn {
     position: absolute;
     left: 0;
     right: auto;
     font-size: 1.8rem;
     font-weight: 800;
-    color: #2F6FD6;
+    color: var(--accent);
     padding: 10px 14px;
   }
 
@@ -806,7 +867,7 @@
     text-align: center;
     font-size: 1rem;
     font-weight: 600;
-    color: #17365D;
+    color: var(--text);
     margin-bottom: 18px;
   }
 
@@ -818,11 +879,11 @@
   }
 
   .journal-note-card {
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     border-radius: 16px;
     padding: 14px;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
+    box-shadow: 0 1px 4px var(--shadow-color);
     /* Long-press opens an action menu - this stops the OS text-selection
        bubble from popping up mid-press and hijacking the gesture. */
     user-select: none;
@@ -832,7 +893,7 @@
   .journal-note-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #17365D;
+    color: var(--text);
     margin-bottom: 4px;
   }
 
@@ -846,7 +907,7 @@
     flex: 1;
     min-width: 0;
     font-size: 0.85rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -855,7 +916,7 @@
   .journal-note-time {
     flex-shrink: 0;
     font-size: 0.72rem;
-    color: #9BADC4;
+    color: var(--text-faint);
   }
 
   .fab-btn {
@@ -866,8 +927,8 @@
     height: 64px;
     border-radius: 50%;
     border: none;
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-size: 1.9rem;
     font-weight: 600;
     line-height: 1;
@@ -891,11 +952,11 @@
     font-family: inherit;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #17365D;
+    color: var(--text);
   }
 
   .note-title-input::placeholder {
-    color: #9BADC4;
+    color: var(--text-faint);
   }
 
   .note-content-input {
@@ -911,7 +972,7 @@
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.6;
-    color: #17365D;
+    color: var(--text);
     /* Some mobile WebViews still draw their native multiline-text-field
        chrome (an inset edge + scrollbar track) even with border:none -
        this strips that so the writing area has no visible edge. */
@@ -926,7 +987,7 @@
   }
 
   .note-content-input::placeholder {
-    color: #9BADC4;
+    color: var(--text-faint);
   }
 
   /* Small dot on calendar days that already have at least one journal note */
@@ -942,7 +1003,7 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: #DCEBFA;
+    background-color: var(--accent-soft);
   }
 
   /* --- Date navigation bar --- */
@@ -957,7 +1018,7 @@
   .date-nav-btn {
     background: none;
     border: none;
-    color: #2F6FD6;
+    color: var(--accent);
     font-size: 1.4rem;
     line-height: 1;
     padding: 4px 10px;
@@ -972,17 +1033,17 @@
   #dateLabelMain {
     font-size: 1rem;
     font-weight: 600;
-    color: #17365D;
+    color: var(--text);
   }
 
   .date-label-sub {
     font-size: 0.78rem;
-    color: #6B7C93;
+    color: var(--text-muted);
   }
 
   .today-btn {
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     border: none;
     border-radius: 8px;
     padding: 5px 10px;
@@ -993,7 +1054,7 @@
   .progress-label {
     text-align: center;
     font-size: 0.85rem;
-    color: #2F6FD6;
+    color: var(--accent);
     margin-bottom: 16px;
   }
 
@@ -1017,7 +1078,7 @@
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
     font-size: 0.75rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     margin-top: 4px;
   }
 
@@ -1030,7 +1091,7 @@
   .calendar-day {
     background: none;
     border: none;
-    color: #17365D;
+    color: var(--text);
     padding: 8px 0;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -1038,16 +1099,16 @@
   }
 
   .calendar-day:hover {
-    background-color: #E4EDF6;
+    background-color: var(--btn);
   }
 
   .calendar-day.today {
-    border: 1px solid #2F6FD6;
+    border: 1px solid var(--accent);
   }
 
   .calendar-day.selected {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -1060,7 +1121,7 @@
   }
 
   .calendar-day.disabled-day {
-    color: #B9C6D6;
+    color: var(--text-placeholder);
     cursor: not-allowed;
     opacity: 0.5;
   }
@@ -1071,7 +1132,7 @@
 
   .empty-msg {
     text-align: center;
-    color: #6B7C93;
+    color: var(--text-muted);
     font-size: 0.9rem;
     padding: 20px 0;
   }
@@ -1080,7 +1141,7 @@
   .settings-section-title {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #6B7C93;
+    color: var(--text-muted);
     margin: 4px 0 10px;
   }
 
@@ -1092,7 +1153,7 @@
 
   .settings-hint {
     font-size: 0.8rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     line-height: 1.4;
     margin-top: 8px;
   }
@@ -1111,9 +1172,9 @@
     padding: 16px;
     border: none;
     border-radius: 16px;
-    background-color: #FFFFFF;
-    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
-    color: #17365D;
+    background-color: var(--surface);
+    box-shadow: 0 1px 4px var(--shadow-color);
+    color: var(--text);
     font-family: inherit;
     font-size: 1rem;
     font-weight: 600;
@@ -1122,8 +1183,54 @@
   }
 
   .settings-card-chevron {
-    color: #6B7C93;
+    color: var(--text-muted);
     font-size: 1.1rem;
+  }
+
+  /* --- Settings detail pages --- */
+  .settings-option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .settings-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background-color: var(--surface);
+    box-shadow: 0 1px 4px var(--shadow-color);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .settings-option-check {
+    color: var(--accent);
+    font-size: 1.1rem;
+    visibility: hidden;
+  }
+
+  .settings-option.selected .settings-option-check {
+    visibility: visible;
+  }
+
+  /* Small pill used to show a setting's current on/off state */
+  .settings-toggle-state {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    background-color: var(--accent-soft);
+    border-radius: 999px;
+    padding: 4px 12px;
   }
 
   /* --- Task action popup --- */
@@ -1163,8 +1270,8 @@
     bottom: 0;
     width: 78%;
     max-width: 300px;
-    background-color: #FFFFFF;
-    box-shadow: 2px 0 12px rgba(23, 54, 93, 0.12);
+    background-color: var(--surface);
+    box-shadow: 2px 0 12px var(--shadow-color-strong);
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     padding: 28px 16px;
@@ -1192,26 +1299,26 @@
   .drawer-header-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #17365D;
+    color: var(--text);
   }
 
   .drawer-item {
     display: block;
     width: 100%;
     text-align: left;
-    background-color: #E4EDF6;
+    background-color: var(--btn);
     border: none;
     border-radius: 12px;
     padding: 16px 18px;
     margin-bottom: 10px;
     font-size: 1rem;
     font-weight: 600;
-    color: #17365D;
+    color: var(--text);
     cursor: pointer;
   }
 
   .drawer-item:active {
-    background-color: #D5E1EE;
+    background-color: var(--border);
   }
 
   .drawer-item-logout {
@@ -1227,21 +1334,21 @@
   .drawer-account-label {
     font-size: 0.72rem;
     font-weight: 600;
-    color: #9BADC4;
+    color: var(--text-faint);
     margin-bottom: 2px;
   }
 
   .drawer-account-email {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #6B7C93;
+    color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .menu {
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     width: 100%;
     max-width: 420px;
     border-radius: 16px 16px 0 0;
@@ -1255,7 +1362,7 @@
     font-size: 1.05rem;
     font-weight: 600;
     text-align: center;
-    color: #2F6FD6;
+    color: var(--accent);
     margin-bottom: 6px;
     word-break: break-word;
   }
@@ -1266,19 +1373,19 @@
     font-weight: 600;
     border: none;
     border-radius: 10px;
-    background-color: #E4EDF6;
-    color: #17365D;
+    background-color: var(--btn);
+    color: var(--text);
     cursor: pointer;
   }
 
   .menu-btn.danger {
-    background-color: #C75A4A;
-    color: #FFFFFF;
+    background-color: var(--danger);
+    color: var(--surface);
   }
 
   .menu-btn.cancel {
     background-color: transparent;
-    color: #6B7C93;
+    color: var(--text-muted);
   }
 
   /* Positioned in the Note Editor's header (see .calendar-btn for the
@@ -1287,8 +1394,8 @@
   .note-save-btn {
     padding: 8px 18px;
     border-radius: 8px;
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
     font-weight: 600;
     font-size: 0.85rem;
     text-align: center;
@@ -1298,7 +1405,7 @@
   #loginScreen {
     position: fixed;
     inset: 0;
-    background-color: #F4F8FC;
+    background-color: var(--bg);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1309,15 +1416,15 @@
   .login-box {
     width: 100%;
     max-width: 360px;
-    background-color: #FFFFFF;
+    background-color: var(--surface);
     border-radius: 16px;
     padding: 28px 24px;
-    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
+    box-shadow: 0 1px 4px var(--shadow-color);
   }
 
   .login-box h1 {
     font-size: 1.4rem;
-    color: #2F6FD6;
+    color: var(--accent);
     text-align: center;
     margin-bottom: 4px;
   }
@@ -1333,7 +1440,7 @@
 
   .login-box .login-sub {
     font-size: 0.85rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     text-align: center;
     margin-bottom: 22px;
   }
@@ -1343,13 +1450,13 @@
     padding: 12px 14px;
     margin-bottom: 12px;
     border-radius: 10px;
-    border: 1px solid #D5E1EE;
-    background-color: #FFFFFF;
-    color: #17365D;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text);
     font-size: 0.95rem;
   }
 
-  .login-input::placeholder { color: #9BADC4; }
+  .login-input::placeholder { color: var(--text-faint); }
 
   .login-btn {
     width: 100%;
@@ -1363,23 +1470,23 @@
   }
 
   .login-btn-primary {
-    background-color: #DCEBFA;
-    color: #17365D;
+    background-color: var(--accent-soft);
+    color: var(--text);
   }
 
   .login-btn-secondary {
     background-color: transparent;
-    color: #2F6FD6;
-    border: 1px solid #D5E1EE;
+    color: var(--accent);
+    border: 1px solid var(--border);
   }
 
   .login-btn-google {
-    background-color: #FFFFFF;
-    color: #17365D;
+    background-color: var(--surface);
+    color: var(--text);
   }
 
   .auth-error {
-    color: #E08A8A;
+    color: var(--danger-text);
     font-size: 0.83rem;
     text-align: center;
     min-height: 1.2em;
@@ -1391,7 +1498,7 @@
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #6B7C93;
+    color: var(--text-muted);
     margin: 14px 0 6px;
   }
 
@@ -1416,7 +1523,7 @@
     margin: auto 0;
     background: none;
     border: none;
-    color: #2F6FD6;
+    color: var(--accent);
     font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
@@ -1425,14 +1532,14 @@
 
   .auth-hint {
     font-size: 0.78rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     line-height: 1.4;
     margin: -2px 0 16px;
   }
 
   .auth-success-text {
     font-size: 0.9rem;
-    color: #6B7C93;
+    color: var(--text-muted);
     text-align: center;
     line-height: 1.5;
     margin: 4px 0 24px;
@@ -1440,7 +1547,7 @@
 
   .auth-spam-hint {
     font-size: 0.78rem;
-    color: #9BADC4;
+    color: var(--text-faint);
     text-align: center;
     line-height: 1.4;
     margin: -18px 0 20px;
@@ -1460,7 +1567,7 @@
     margin: -4px 0 14px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #2F6FD6;
+    color: var(--accent);
     cursor: pointer;
     text-align: right;
   }
@@ -1473,14 +1580,19 @@
 
   #loginLoading {
     text-align: center;
-    color: #2F6FD6;
+    color: var(--accent);
     font-size: 0.85rem;
     margin-top: 10px;
     display: none;
   }
 </style>
+<!-- Firebase (Authentication + Firestore). Loaded after the stylesheet so
+     these render-blocking scripts can't delay the app's first paint. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 </head>
-<body style="background-color:#F4F8FC;">
+<body>
 
 <!-- AUTHENTICATION: shown until the user is signed in. One fixed card,
      with a separate panel per screen swapped inside it - see the
@@ -1712,9 +1824,9 @@
     </div>
 
     <div class="settings-card-list">
-      <button class="settings-card" type="button">Switch Account<span class="settings-card-chevron">›</span></button>
-      <button class="settings-card" type="button">Appearance<span class="settings-card-chevron">›</span></button>
-      <button class="settings-card" type="button">Timer &amp; Focus<span class="settings-card-chevron">›</span></button>
+      <button class="settings-card" type="button" id="settingsSwitchAccountCard">Switch Account<span class="settings-card-chevron">›</span></button>
+      <button class="settings-card" type="button" data-settings-page="appearance">Appearance<span class="settings-card-chevron">›</span></button>
+      <button class="settings-card" type="button" data-settings-page="timer">Timer &amp; Focus<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Notifications<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Tasks<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Journal<span class="settings-card-chevron">›</span></button>
@@ -1730,6 +1842,38 @@
       <button class="menu-btn danger" id="deleteAccountBtn">Delete Account</button>
       <div class="settings-hint">Permanently deletes your account and all your tasks, journal entries, and tags from the cloud. This cannot be undone.</div>
     </div>
+  </div>
+
+  <!-- SETTINGS DETAIL PAGE: one shared screen, showing whichever section's
+       options were opened from the Settings card list. -->
+  <div id="settingsSubView" style="display: none;">
+    <div class="app-header">
+      <button id="settingsSubBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1 id="settingsSubTitle">Settings</h1>
+    </div>
+
+    <div class="settings-option-list" id="settingsPageAppearance" style="display: none;">
+      <button class="settings-option" type="button" data-theme-choice="light">Light<span class="settings-option-check">✓</span></button>
+      <button class="settings-option" type="button" data-theme-choice="dark">Dark<span class="settings-option-check">✓</span></button>
+      <button class="settings-option" type="button" data-theme-choice="system">System Default<span class="settings-option-check">✓</span></button>
+    </div>
+
+    <div id="settingsPageTimer" style="display: none;">
+      <div class="settings-option-list">
+        <button class="settings-option" type="button" id="timerSoundToggleBtn">Timer Sound<span class="settings-toggle-state" id="timerSoundState">On</span></button>
+      </div>
+      <div class="settings-hint">Plays a short chime when a focus timer reaches Time's Up.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Switch Account confirmation -->
+<div class="overlay" id="switchAccountOverlay">
+  <div class="menu">
+    <div class="menu-title">Switch account?</div>
+    <div class="menu-subtext">You'll be signed out and taken to the login screen, where you can sign in with a different account. Your tasks and journal stay safely in your current account.</div>
+    <button class="menu-btn" id="switchAccountConfirmBtn">Sign Out &amp; Switch</button>
+    <button class="menu-btn cancel" id="switchAccountCancelBtn">Cancel</button>
   </div>
 </div>
 
@@ -2059,6 +2203,49 @@
     console.error('Could not enable offline persistence:', err.code);
   });
 
+  // ---- App preferences (theme, sounds) ----
+  // Device-level on purpose: they apply on the login screen too, before any
+  // account is known, and "which theme this phone uses" is a property of the
+  // device rather than of the account. Stored separately from task data, so
+  // nothing here can touch tasks, journal entries or cloud sync.
+  const PREFS_KEY = 'oneTaskAtATime_prefs';
+  const defaultPrefs = { theme: 'system', timerSound: true };
+  let prefs = Object.assign({}, defaultPrefs);
+
+  function loadPrefs() {
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (raw) prefs = Object.assign({}, defaultPrefs, JSON.parse(raw));
+    } catch (e) {
+      prefs = Object.assign({}, defaultPrefs); // unreadable prefs - fall back to defaults
+    }
+  }
+
+  function savePrefs() {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* storage full or blocked */ }
+  }
+
+  const systemDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function applyTheme() {
+    const dark = prefs.theme === 'dark'
+      || (prefs.theme === 'system' && !!systemDarkQuery && systemDarkQuery.matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.documentElement.style.backgroundColor = dark ? '#0F1722' : '#F4F8FC';
+    const meta = document.getElementById('themeColorMeta');
+    if (meta) meta.setAttribute('content', dark ? '#0F1722' : '#F4F8FC');
+  }
+
+  loadPrefs();
+  applyTheme();
+
+  // Follow the device theme live while "System Default" is selected.
+  if (systemDarkQuery) {
+    const onSystemThemeChange = () => { if (prefs.theme === 'system') applyTheme(); };
+    if (systemDarkQuery.addEventListener) systemDarkQuery.addEventListener('change', onSystemThemeChange);
+    else if (systemDarkQuery.addListener) systemDarkQuery.addListener(onSystemThemeChange);
+  }
+
   let currentUid = null;
   let cloudSyncTimer = null;
   let cloudUnsubscribe = null; // stops the live listener started by startCloudListener()
@@ -2188,6 +2375,17 @@
   const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
   const settingsView = document.getElementById('settingsView');
   const settingsBackBtn = document.getElementById('settingsBackBtn');
+  const settingsSubView = document.getElementById('settingsSubView');
+  const settingsSubBackBtn = document.getElementById('settingsSubBackBtn');
+  const settingsSubTitle = document.getElementById('settingsSubTitle');
+  const settingsPageAppearance = document.getElementById('settingsPageAppearance');
+  const settingsPageTimer = document.getElementById('settingsPageTimer');
+  const settingsSwitchAccountCard = document.getElementById('settingsSwitchAccountCard');
+  const switchAccountOverlay = document.getElementById('switchAccountOverlay');
+  const switchAccountConfirmBtn = document.getElementById('switchAccountConfirmBtn');
+  const switchAccountCancelBtn = document.getElementById('switchAccountCancelBtn');
+  const timerSoundToggleBtn = document.getElementById('timerSoundToggleBtn');
+  const timerSoundState = document.getElementById('timerSoundState');
   const journalView = document.getElementById('journalView');
   const journalHamburgerBtn = document.getElementById('journalHamburgerBtn');
   const journalCalendarBtn = document.getElementById('journalCalendarBtn');
@@ -3241,7 +3439,7 @@
   const scopedOverlays = [
     noteOptionsOverlay, archivedActionOverlay,
     permanentDeleteOverlay, drawerOverlay, journalDrawerOverlay,
-    deleteAccountOverlay
+    deleteAccountOverlay, switchAccountOverlay
   ];
 
   window.addEventListener('popstate', () => {
@@ -3296,6 +3494,10 @@
     } else if (binHistoryActive && binView.style.display !== 'none') {
       binHistoryActive = false;
       hideBinView();
+    } else if (settingsSubHistoryActive && settingsSubView.style.display !== 'none') {
+      // A settings detail page sits above the Settings list - close it first.
+      settingsSubHistoryActive = false;
+      hideSettingsSubView();
     } else if (settingsHistoryActive && settingsView.style.display !== 'none') {
       settingsHistoryActive = false;
       hideSettingsView();
@@ -4337,6 +4539,7 @@
       stopInterval();
       clearActiveNotification();
       showCompletionNotification(task);
+      playTimerCompletionSound();
       saveTasks(); // completion is a real transition - persist it
       render();
       // Stay in Focus Mode context - show the completion popup instead
@@ -4443,6 +4646,38 @@
     // Just close the popup - timer keeps running exactly as it was
     breakOverlay.classList.remove('open');
   });
+
+  // Short two-note chime for when a focus timer finishes. Generated with the
+  // Web Audio API instead of an audio file, so there's no asset to download
+  // or cache and it works offline. The context is created lazily because
+  // browsers only allow audio to start after a user gesture.
+  let audioCtx = null;
+  function playTimerCompletionSound() {
+    if (!prefs.timerSound) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      [[880, 0], [1174.66, 0.18]].forEach((pair) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = pair[0];
+        const at = now + pair[1];
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.3, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(at);
+        osc.stop(at + 0.4);
+      });
+    } catch (e) {
+      // Audio blocked or unsupported - the popup and notification still fire.
+    }
+  }
 
   // ---- Time's Up completion modal ----
   timesUpRestartBtn.addEventListener('click', () => {
@@ -4690,6 +4925,99 @@
   settingsBackBtn.addEventListener('click', () => {
     hideSettingsView();
     popSettingsHistory();
+  });
+
+  // ---- Settings detail pages ----
+  // One shared screen that swaps in whichever section's options were opened,
+  // following the same show/hide + history pattern as the other sub-screens.
+  let settingsSubHistoryActive = false;
+  const settingsPages = {
+    appearance: { title: 'Appearance', el: settingsPageAppearance },
+    timer: { title: 'Timer & Focus', el: settingsPageTimer },
+  };
+
+  function showSettingsSubView(pageKey) {
+    const page = settingsPages[pageKey];
+    if (!page) return;
+    Object.keys(settingsPages).forEach((key) => {
+      settingsPages[key].el.style.display = key === pageKey ? 'block' : 'none';
+    });
+    settingsSubTitle.textContent = page.title;
+    if (pageKey === 'appearance') renderAppearancePage();
+    if (pageKey === 'timer') renderTimerSoundPage();
+    settingsView.style.display = 'none';
+    settingsSubView.style.display = 'block';
+    if (!settingsSubHistoryActive) {
+      try { history.pushState({ view: 'settingsSub' }, ''); settingsSubHistoryActive = true; } catch (e) { /* see note above */ }
+    }
+  }
+
+  function hideSettingsSubView() {
+    settingsSubView.style.display = 'none';
+    settingsView.style.display = 'block';
+  }
+
+  document.querySelectorAll('[data-settings-page]').forEach((card) => {
+    card.addEventListener('click', () => showSettingsSubView(card.dataset.settingsPage));
+  });
+
+  settingsSubBackBtn.addEventListener('click', () => {
+    hideSettingsSubView();
+    if (settingsSubHistoryActive) {
+      settingsSubHistoryActive = false;
+      ignoreNextPopstate = true;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
+  });
+
+  // ---- Appearance ----
+  function renderAppearancePage() {
+    settingsPageAppearance.querySelectorAll('[data-theme-choice]').forEach((btn) => {
+      btn.classList.toggle('selected', btn.dataset.themeChoice === prefs.theme);
+    });
+  }
+
+  settingsPageAppearance.querySelectorAll('[data-theme-choice]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      prefs.theme = btn.dataset.themeChoice;
+      savePrefs();
+      applyTheme();
+      renderAppearancePage();
+    });
+  });
+
+  // ---- Timer sound ----
+  function renderTimerSoundPage() {
+    timerSoundState.textContent = prefs.timerSound ? 'On' : 'Off';
+  }
+
+  timerSoundToggleBtn.addEventListener('click', () => {
+    prefs.timerSound = !prefs.timerSound;
+    savePrefs();
+    renderTimerSoundPage();
+    if (prefs.timerSound) playTimerCompletionSound(); // preview what was just turned on
+  });
+
+  // ---- Switch account ----
+  settingsSwitchAccountCard.addEventListener('click', () => {
+    switchAccountOverlay.classList.add('open');
+  });
+
+  switchAccountCancelBtn.addEventListener('click', () => {
+    switchAccountOverlay.classList.remove('open');
+  });
+
+  switchAccountConfirmBtn.addEventListener('click', () => {
+    switchAccountOverlay.classList.remove('open');
+    // Leave Settings before signing out, so the next account that signs in
+    // on this device lands on its own task list rather than on this screen.
+    hideSettingsView();
+    popSettingsHistory();
+    // Signing out runs the existing onAuthStateChanged(null) cleanup, which
+    // stops the cloud listener, drops any pending write, and returns to the
+    // login screen. Local caches are keyed by uid, so the next account that
+    // signs in on this device never sees the previous account's data.
+    auth.signOut();
   });
 
   journalCalendarBtn.addEventListener('click', () => {
