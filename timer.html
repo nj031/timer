@@ -1251,6 +1251,15 @@
     margin-bottom: 4px;
   }
 
+  /* Sub-screens with a back arrow reserve space on both sides so a long
+     heading (e.g. "Create Free Account") can't run into the button. */
+  .login-box .app-header h1 {
+    font-size: 1.05rem;
+    padding: 0 36px;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
   .login-box .login-sub {
     font-size: 0.85rem;
     color: #6B7C93;
@@ -1298,19 +1307,76 @@
     color: #17365D;
   }
 
-  .login-divider {
-    text-align: center;
-    color: #9BADC4;
-    font-size: 0.8rem;
-    margin: 14px 0;
-  }
-
-  #loginError {
+  .auth-error {
     color: #E08A8A;
     font-size: 0.83rem;
     text-align: center;
     min-height: 1.2em;
     margin-bottom: 8px;
+  }
+
+  /* --- Authentication sub-screens (Log In, Create Account, etc.) --- */
+  .auth-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6B7C93;
+    margin: 14px 0 6px;
+  }
+
+  .auth-label:first-of-type {
+    margin-top: 0;
+  }
+
+  .auth-password-wrap {
+    position: relative;
+  }
+
+  .auth-password-wrap .login-input {
+    padding-right: 64px;
+  }
+
+  .auth-password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    bottom: 12px;
+    height: fit-content;
+    margin: auto 0;
+    background: none;
+    border: none;
+    color: #2F6FD6;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+
+  .auth-hint {
+    font-size: 0.78rem;
+    color: #6B7C93;
+    line-height: 1.4;
+    margin: -2px 0 16px;
+  }
+
+  .auth-success-text {
+    font-size: 0.9rem;
+    color: #6B7C93;
+    text-align: center;
+    line-height: 1.5;
+    margin: 4px 0 24px;
+  }
+
+  .auth-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+
+  .auth-btn-row .login-btn {
+    width: auto;
+    padding: 12px 28px;
+    margin-bottom: 0;
   }
 
   #loginLoading {
@@ -1324,23 +1390,97 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN: shown until the user is signed in -->
+<!-- AUTHENTICATION: shown until the user is signed in. One fixed card,
+     with a separate panel per screen swapped inside it - see the
+     "Authentication screens" JS section for the view stack/back-button
+     handling shared by all of these. -->
 <div id="loginScreen">
   <div class="login-box">
-    <h1>One Task</h1>
-    <div class="login-sub">Sign in to keep your tasks safe</div>
 
-    <div id="loginError"></div>
+    <!-- LANDING: the very first screen - just three entry points, no
+         email/password fields here. -->
+    <div id="authLandingPanel" class="auth-panel">
+      <h1>One Task</h1>
+      <div class="login-sub">Sign in to keep your tasks safe</div>
+      <div id="authLandingError" class="auth-error"></div>
+      <button id="authLoginBtn" class="login-btn login-btn-primary">Log In</button>
+      <button id="googleSignInBtn" class="login-btn login-btn-google">Continue with Google</button>
+      <button id="authCreateAccountBtn" class="login-btn login-btn-secondary">Create Free Account</button>
+    </div>
 
-    <input type="email" id="loginEmail" class="login-input" placeholder="Email" autocomplete="email">
-    <input type="password" id="loginPassword" class="login-input" placeholder="Password" autocomplete="current-password">
+    <!-- LOG IN -->
+    <div id="authLoginPanel" class="auth-panel" style="display: none;">
+      <div class="app-header">
+        <button id="authLoginBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+        <h1>Log In</h1>
+      </div>
+      <div id="authLoginError" class="auth-error"></div>
 
-    <button id="loginSubmitBtn" class="login-btn login-btn-primary">Log In</button>
-    <button id="signupSubmitBtn" class="login-btn login-btn-secondary">Create Account</button>
+      <label class="auth-label" for="authLoginEmail">Email</label>
+      <input type="email" id="authLoginEmail" class="login-input" autocomplete="email">
 
-    <div class="login-divider">— or —</div>
+      <label class="auth-label" for="authLoginPassword">Password</label>
+      <div class="auth-password-wrap">
+        <input type="password" id="authLoginPassword" class="login-input" autocomplete="current-password">
+        <button type="button" class="auth-password-toggle" data-target="authLoginPassword">Show</button>
+      </div>
 
-    <button id="googleSignInBtn" class="login-btn login-btn-google">Continue with Google</button>
+      <div class="auth-btn-row">
+        <button id="authLoginSubmitBtn" class="login-btn login-btn-primary">Log In</button>
+      </div>
+    </div>
+
+    <!-- CREATE ACCOUNT - STEP 1: email -->
+    <div id="authSignupStep1Panel" class="auth-panel" style="display: none;">
+      <div class="app-header">
+        <button id="authSignupStep1BackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+        <h1>Create Free Account</h1>
+      </div>
+      <div id="authSignupStep1Error" class="auth-error"></div>
+
+      <label class="auth-label" for="authSignupEmail">Email Address</label>
+      <input type="email" id="authSignupEmail" class="login-input" autocomplete="email">
+
+      <div class="auth-btn-row">
+        <button id="authSignupStep1NextBtn" class="login-btn login-btn-primary">Next</button>
+      </div>
+    </div>
+
+    <!-- CREATE ACCOUNT - STEP 2: password -->
+    <div id="authSignupStep2Panel" class="auth-panel" style="display: none;">
+      <div class="app-header">
+        <button id="authSignupStep2BackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+        <h1>Set Up Password</h1>
+      </div>
+      <div id="authSignupStep2Error" class="auth-error"></div>
+
+      <label class="auth-label" for="authSignupPassword">Password</label>
+      <div class="auth-password-wrap">
+        <input type="password" id="authSignupPassword" class="login-input" autocomplete="new-password">
+        <button type="button" class="auth-password-toggle" data-target="authSignupPassword">Show</button>
+      </div>
+
+      <label class="auth-label" for="authSignupConfirmPassword">Confirm Password</label>
+      <div class="auth-password-wrap">
+        <input type="password" id="authSignupConfirmPassword" class="login-input" autocomplete="new-password">
+        <button type="button" class="auth-password-toggle" data-target="authSignupConfirmPassword">Show</button>
+      </div>
+
+      <div class="auth-hint">Use at least 8 characters, with at least one letter and one number.</div>
+
+      <div class="auth-btn-row">
+        <button id="authSignupStep2NextBtn" class="login-btn login-btn-primary">Next</button>
+      </div>
+    </div>
+
+    <!-- ACCOUNT CREATED -->
+    <div id="authAccountCreatedPanel" class="auth-panel" style="display: none;">
+      <h1>Account Created</h1>
+      <div class="auth-success-text">Your account has been created successfully.</div>
+      <div class="auth-btn-row">
+        <button id="authGoToLoginBtn" class="login-btn login-btn-primary">Go to Log In</button>
+      </div>
+    </div>
 
     <div id="loginLoading">Loading your tasks…</div>
   </div>
@@ -2783,6 +2923,20 @@
       ignoreNextPopstate = false;
       return;
     }
+    if (authViewStack.length > 0) {
+      // Only the first step away from Landing pushed a real history entry
+      // (see pushAuthView above) - every logical step after that re-arms
+      // that same entry here instead of consuming it, so Back walks the
+      // auth flow one screen at a time rather than exiting after one press.
+      authViewStack.pop();
+      if (authViewStack.length > 0) {
+        history.pushState({}, '');
+        showAuthPanel(authViewStack[authViewStack.length - 1]);
+      } else {
+        showAuthPanel('landing');
+      }
+      return;
+    }
     const openOverlay = scopedOverlays.find((el) => el.classList.contains('open'));
     if (openOverlay) {
       // Cancel the pop - it only closes this overlay, the view beneath stays put.
@@ -4193,22 +4347,48 @@
     }
   });
 
-  // ---- Login screen wiring ----
+  // ---- Authentication screens ----
   const loginScreenEl = document.getElementById('loginScreen');
   const appRootEl = document.getElementById('appRoot');
-  const loginEmailEl = document.getElementById('loginEmail');
-  const loginPasswordEl = document.getElementById('loginPassword');
-  const loginErrorEl = document.getElementById('loginError');
   const loginLoadingEl = document.getElementById('loginLoading');
-  const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-  const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+
+  const authPanels = {
+    landing: document.getElementById('authLandingPanel'),
+    login: document.getElementById('authLoginPanel'),
+    signup1: document.getElementById('authSignupStep1Panel'),
+    signup2: document.getElementById('authSignupStep2Panel'),
+    created: document.getElementById('authAccountCreatedPanel'),
+  };
+  const authErrors = {
+    landing: document.getElementById('authLandingError'),
+    login: document.getElementById('authLoginError'),
+    signup1: document.getElementById('authSignupStep1Error'),
+    signup2: document.getElementById('authSignupStep2Error'),
+  };
+
+  const authLoginBtn = document.getElementById('authLoginBtn');
+  const authCreateAccountBtn = document.getElementById('authCreateAccountBtn');
   const googleSignInBtn = document.getElementById('googleSignInBtn');
+  const authLoginBackBtn = document.getElementById('authLoginBackBtn');
+  const authLoginEmail = document.getElementById('authLoginEmail');
+  const authLoginPassword = document.getElementById('authLoginPassword');
+  const authLoginSubmitBtn = document.getElementById('authLoginSubmitBtn');
+  const authSignupStep1BackBtn = document.getElementById('authSignupStep1BackBtn');
+  const authSignupEmail = document.getElementById('authSignupEmail');
+  const authSignupStep1NextBtn = document.getElementById('authSignupStep1NextBtn');
+  const authSignupStep2BackBtn = document.getElementById('authSignupStep2BackBtn');
+  const authSignupPassword = document.getElementById('authSignupPassword');
+  const authSignupConfirmPassword = document.getElementById('authSignupConfirmPassword');
+  const authSignupStep2NextBtn = document.getElementById('authSignupStep2NextBtn');
+  const authGoToLoginBtn = document.getElementById('authGoToLoginBtn');
+
+  let signupEmail = ''; // carried from Step 1 to the Firebase call after Step 2
 
   function showLoginScreen() {
     loginScreenEl.style.display = 'flex';
     appRootEl.style.display = 'none';
     loginLoadingEl.style.display = 'none';
-    loginErrorEl.textContent = '';
+    resetAuthScreens();
   }
 
   function friendlyAuthError(err) {
@@ -4225,37 +4405,141 @@
     return map[err.code] || err.message || 'Something went wrong. Please try again.';
   }
 
-  loginSubmitBtn.addEventListener('click', () => {
-    loginErrorEl.textContent = '';
-    const email = loginEmailEl.value.trim();
-    const password = loginPasswordEl.value;
+  // ---- View stack (Landing -> Login/Step1 -> Step2 -> Created) ----
+  // Only the FIRST step away from Landing pushes a real history entry;
+  // every logical step after that just swaps which panel shows and
+  // re-arms that same entry on Back, so the phone's hardware Back button
+  // walks the stack one logical screen at a time instead of exiting.
+  let authViewStack = [];
+
+  function showAuthPanel(view) {
+    Object.keys(authPanels).forEach((key) => {
+      authPanels[key].style.display = key === view ? 'block' : 'none';
+    });
+    if (authErrors[view]) authErrors[view].textContent = '';
+  }
+
+  function resetAuthScreens() {
+    authViewStack = [];
+    signupEmail = '';
+    [authLoginEmail, authLoginPassword, authSignupEmail, authSignupPassword, authSignupConfirmPassword].forEach((el) => { el.value = ''; });
+    Object.values(authErrors).forEach((el) => { el.textContent = ''; });
+    document.querySelectorAll('.auth-password-toggle').forEach(resetPasswordToggle);
+    showAuthPanel('landing');
+  }
+
+  function pushAuthView(view) {
+    const wasEmpty = authViewStack.length === 0;
+    authViewStack.push(view);
+    showAuthPanel(view);
+    if (wasEmpty) {
+      try { history.pushState({}, ''); } catch (e) { /* see note above */ }
+    }
+  }
+
+  // Used only by "Go to Log In" from the Account Created screen: replaces
+  // the whole (now-irrelevant) signup stack with just [login], so Back
+  // from there goes straight to Landing rather than back into the
+  // finished signup steps.
+  function replaceAuthView(view) {
+    const wasEmpty = authViewStack.length === 0;
+    authViewStack = [view];
+    showAuthPanel(view);
+    if (wasEmpty) {
+      try { history.pushState({}, ''); } catch (e) { /* see note above */ }
+    }
+  }
+
+  function resetPasswordToggle(btn) {
+    const input = document.getElementById(btn.dataset.target);
+    input.type = 'password';
+    btn.textContent = 'Show';
+  }
+
+  document.querySelectorAll('.auth-password-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.textContent = showing ? 'Show' : 'Hide';
+    });
+  });
+
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  authLoginBtn.addEventListener('click', () => pushAuthView('login'));
+  authCreateAccountBtn.addEventListener('click', () => pushAuthView('signup1'));
+  authLoginBackBtn.addEventListener('click', () => history.back());
+  authSignupStep1BackBtn.addEventListener('click', () => history.back());
+  authSignupStep2BackBtn.addEventListener('click', () => history.back());
+
+  authLoginSubmitBtn.addEventListener('click', () => {
+    authErrors.login.textContent = '';
+    const email = authLoginEmail.value.trim();
+    const password = authLoginPassword.value;
     if (!email || !password) {
-      loginErrorEl.textContent = 'Please enter both email and password.';
+      authErrors.login.textContent = 'Please enter both email and password.';
       return;
     }
     auth.signInWithEmailAndPassword(email, password).catch((err) => {
-      loginErrorEl.textContent = friendlyAuthError(err);
+      authErrors.login.textContent = friendlyAuthError(err);
     });
   });
 
-  signupSubmitBtn.addEventListener('click', () => {
-    loginErrorEl.textContent = '';
-    const email = loginEmailEl.value.trim();
-    const password = loginPasswordEl.value;
-    if (!email || !password) {
-      loginErrorEl.textContent = 'Please enter both email and password.';
+  authSignupStep1NextBtn.addEventListener('click', () => {
+    authErrors.signup1.textContent = '';
+    const email = authSignupEmail.value.trim();
+    if (!email) {
+      authErrors.signup1.textContent = 'Please enter your email address.';
       return;
     }
-    auth.createUserWithEmailAndPassword(email, password).catch((err) => {
-      loginErrorEl.textContent = friendlyAuthError(err);
-    });
+    if (!EMAIL_PATTERN.test(email)) {
+      authErrors.signup1.textContent = 'That email address looks invalid.';
+      return;
+    }
+    signupEmail = email;
+    pushAuthView('signup2');
   });
 
+  authSignupStep2NextBtn.addEventListener('click', () => {
+    authErrors.signup2.textContent = '';
+    const password = authSignupPassword.value;
+    const confirmPassword = authSignupConfirmPassword.value;
+    const meetsRequirements = password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
+    if (!meetsRequirements) {
+      authErrors.signup2.textContent = 'Password must be at least 8 characters and include a letter and a number.';
+      return;
+    }
+    if (password !== confirmPassword) {
+      authErrors.signup2.textContent = 'Passwords do not match.';
+      return;
+    }
+    authSignupStep2NextBtn.disabled = true;
+    auth.createUserWithEmailAndPassword(signupEmail, password)
+      .then(() => {
+        // Account created successfully, but per the intended flow the user
+        // should land on Login and sign in explicitly - not be dropped
+        // straight into the app (createUserWithEmailAndPassword signs them
+        // in as a side effect, so undo that immediately).
+        return auth.signOut();
+      })
+      .then(() => {
+        authSignupStep2NextBtn.disabled = false;
+        pushAuthView('created');
+      })
+      .catch((err) => {
+        authSignupStep2NextBtn.disabled = false;
+        authErrors.signup2.textContent = friendlyAuthError(err);
+      });
+  });
+
+  authGoToLoginBtn.addEventListener('click', () => replaceAuthView('login'));
+
   googleSignInBtn.addEventListener('click', () => {
-    loginErrorEl.textContent = '';
+    authErrors.landing.textContent = '';
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch((err) => {
-      loginErrorEl.textContent = friendlyAuthError(err);
+      authErrors.landing.textContent = friendlyAuthError(err);
     });
   });
 
@@ -4317,6 +4601,7 @@
   auth.onAuthStateChanged((user) => {
     if (user) {
       currentUid = user.uid;
+      authViewStack = []; // leaving the auth flow - don't carry a stale checkpoint into the app
       initAppDataForUser(user.uid);
     } else {
       currentUid = null;
