@@ -780,16 +780,6 @@
     height: auto;
   }
 
-  .note-menu-btn {
-    color: #2F6FD6;
-    font-size: 2rem;
-    font-weight: 800;
-  }
-
-  .journal-btn {
-    right: 38px;
-  }
-
   .journal-back-btn {
     position: absolute;
     left: 0;
@@ -1414,9 +1404,8 @@
   <!-- JOURNAL VIEW: date-based notes, opened from the Journal button -->
   <div id="journalView" style="display: none;">
     <div class="app-header">
-      <button id="journalBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <button id="journalHamburgerBtn" class="hamburger-btn" aria-label="Open menu">☰</button>
       <h1>Journal</h1>
-      <button id="journalMenuBtn" class="calendar-btn note-menu-btn journal-btn" aria-label="Journal options">⋮</button>
       <button id="journalCalendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon"></button>
     </div>
     <div class="journal-date-label" id="journalDateLabel">Today</div>
@@ -1490,12 +1479,12 @@
   </div>
 </div>
 
-<!-- Journal header menu (Archive / Recycle Bin) -->
-<div class="overlay" id="journalMenuOverlay">
-  <div class="menu">
-    <button class="menu-btn" id="openArchiveBtn">🗄 Archive</button>
-    <button class="menu-btn" id="openBinBtn">🗑 Recycle Bin</button>
-    <button class="menu-btn cancel" id="journalMenuCancelBtn">Cancel</button>
+<!-- Journal hamburger side navigation drawer: Recycle Bin / Archive / Settings -->
+<div class="drawer-overlay" id="journalDrawerOverlay">
+  <div class="drawer-panel">
+    <button class="drawer-item" id="journalDrawerBinBtn">Recycle Bin</button>
+    <button class="drawer-item" id="journalDrawerArchiveBtn">Archive</button>
+    <button class="drawer-item" id="journalDrawerSettingsBtn">Settings</button>
   </div>
 </div>
 
@@ -1788,8 +1777,7 @@
   const settingsView = document.getElementById('settingsView');
   const settingsBackBtn = document.getElementById('settingsBackBtn');
   const journalView = document.getElementById('journalView');
-  const journalBackBtn = document.getElementById('journalBackBtn');
-  const journalMenuBtn = document.getElementById('journalMenuBtn');
+  const journalHamburgerBtn = document.getElementById('journalHamburgerBtn');
   const journalCalendarBtn = document.getElementById('journalCalendarBtn');
   const journalDateLabel = document.getElementById('journalDateLabel');
   const journalNotesList = document.getElementById('journalNotesList');
@@ -1809,10 +1797,10 @@
   const binView = document.getElementById('binView');
   const binBackBtn = document.getElementById('binBackBtn');
   const binNotesList = document.getElementById('binNotesList');
-  const journalMenuOverlay = document.getElementById('journalMenuOverlay');
-  const openArchiveBtn = document.getElementById('openArchiveBtn');
-  const openBinBtn = document.getElementById('openBinBtn');
-  const journalMenuCancelBtn = document.getElementById('journalMenuCancelBtn');
+  const journalDrawerOverlay = document.getElementById('journalDrawerOverlay');
+  const journalDrawerBinBtn = document.getElementById('journalDrawerBinBtn');
+  const journalDrawerArchiveBtn = document.getElementById('journalDrawerArchiveBtn');
+  const journalDrawerSettingsBtn = document.getElementById('journalDrawerSettingsBtn');
   const archivedActionOverlay = document.getElementById('archivedActionOverlay');
   const restoreNoteOptionBtn = document.getElementById('restoreNoteOptionBtn');
   const permanentDeleteOptionBtn = document.getElementById('permanentDeleteOptionBtn');
@@ -2354,16 +2342,13 @@
   // change ourselves" so it doesn't also react and skip an extra level.
   let ignoreNextPopstate = false;
 
+  // Journal has no in-app back button - the only way out is the system
+  // Back button, which the popstate handler's journalHistoryActive branch
+  // below handles directly (no explicit pop needed, since the popstate
+  // event itself is the natural consumption of this checkpoint).
   function pushJournalHistory() {
     if (!journalHistoryActive) {
       try { history.pushState({ view: 'journal' }, ''); journalHistoryActive = true; } catch (e) { /* sandboxed preview - see showFocusView() note */ }
-    }
-  }
-  function popJournalHistory() {
-    if (journalHistoryActive) {
-      journalHistoryActive = false;
-      ignoreNextPopstate = true;
-      try { history.back(); } catch (e) { /* see note above */ }
     }
   }
   function pushNoteHistory() {
@@ -2411,23 +2396,24 @@
     if (calendarOverlay.classList.contains('open')) renderCalendar();
   });
 
-  // ---- Journal header menu (Archive / Recycle Bin) ----
-  journalMenuBtn.addEventListener('click', () => {
-    journalMenuOverlay.classList.add('open');
+  // ---- Journal hamburger drawer (Recycle Bin / Archive / Settings) ----
+  journalHamburgerBtn.addEventListener('click', () => {
+    journalDrawerOverlay.classList.add('open');
   });
-  journalMenuCancelBtn.addEventListener('click', () => {
-    journalMenuOverlay.classList.remove('open');
+  journalDrawerOverlay.addEventListener('click', (e) => {
+    if (e.target === journalDrawerOverlay) journalDrawerOverlay.classList.remove('open');
   });
-  journalMenuOverlay.addEventListener('click', (e) => {
-    if (e.target === journalMenuOverlay) journalMenuOverlay.classList.remove('open');
+  journalDrawerBinBtn.addEventListener('click', () => {
+    journalDrawerOverlay.classList.remove('open');
+    showBinView();
   });
-  openArchiveBtn.addEventListener('click', () => {
-    journalMenuOverlay.classList.remove('open');
+  journalDrawerArchiveBtn.addEventListener('click', () => {
+    journalDrawerOverlay.classList.remove('open');
     showArchiveView();
   });
-  openBinBtn.addEventListener('click', () => {
-    journalMenuOverlay.classList.remove('open');
-    showBinView();
+  journalDrawerSettingsBtn.addEventListener('click', () => {
+    journalDrawerOverlay.classList.remove('open');
+    showSettingsView('journal');
   });
 
   // ---- Archive / Recycle Bin views ----
@@ -2771,7 +2757,7 @@
   // stuck open on top of it.
   const scopedOverlays = [
     noteOptionsOverlay, archivedActionOverlay,
-    permanentDeleteOverlay, journalMenuOverlay, drawerOverlay
+    permanentDeleteOverlay, drawerOverlay, journalDrawerOverlay
   ];
 
   window.addEventListener('popstate', () => {
@@ -4094,16 +4080,23 @@
   });
   drawerSettingsBtn.addEventListener('click', () => {
     drawerOverlay.classList.remove('open');
-    showSettingsView();
+    showSettingsView('home');
   });
 
   // ---- Settings view (basic placeholder page) ----
+  // Settings is reachable from both the Homepage drawer and the Journal
+  // drawer, so it remembers which one it was opened from to know which
+  // screen to restore when it closes.
   let settingsHistoryActive = false;
+  let settingsReturnTo = 'home';
 
-  function showSettingsView() {
+  function showSettingsView(returnTo) {
+    settingsReturnTo = returnTo;
     mainAppHeader.style.display = 'none';
     listView.style.display = 'none';
     focusView.style.display = 'none';
+    journalView.style.display = 'none';
+    addNoteFab.style.display = 'none';
     settingsView.style.display = 'block';
     if (!settingsHistoryActive) {
       try { history.pushState({ view: 'settings' }, ''); settingsHistoryActive = true; } catch (e) { /* see note above */ }
@@ -4111,8 +4104,13 @@
   }
   function hideSettingsView() {
     settingsView.style.display = 'none';
-    mainAppHeader.style.display = 'flex';
-    listView.style.display = 'block';
+    if (settingsReturnTo === 'journal') {
+      journalView.style.display = 'block';
+      addNoteFab.style.display = 'flex';
+    } else {
+      mainAppHeader.style.display = 'flex';
+      listView.style.display = 'block';
+    }
   }
   function popSettingsHistory() {
     if (settingsHistoryActive) {
@@ -4126,10 +4124,6 @@
     popSettingsHistory();
   });
 
-  journalBackBtn.addEventListener('click', () => {
-    hideJournalView();
-    popJournalHistory();
-  });
   journalCalendarBtn.addEventListener('click', () => {
     calendarPurpose = 'pickForJournal';
     openCalendar();
