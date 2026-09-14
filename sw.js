@@ -1,11 +1,18 @@
 // Minimal service worker: caches the app so it opens even with no internet.
-const CACHE_NAME = 'focus-timer-v45';
+const CACHE_NAME = 'focus-timer-v46';
 const FILES_TO_CACHE = ['./timer.html', './manifest.json', './icon-192.png', './icon-512.png', './calendar-icon.png'];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // activate this new version immediately, don't wait
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) =>
+      // cache.addAll() lets the browser reuse a stale copy from its normal
+      // HTTP cache. Fetching with {cache: 'reload'} forces a real network
+      // request every time, so an update always gets truly fresh files.
+      Promise.all(FILES_TO_CACHE.map((url) =>
+        fetch(url, { cache: 'reload' }).then((response) => cache.put(url, response))
+      ))
+    )
   );
 });
 
