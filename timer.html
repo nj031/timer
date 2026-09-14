@@ -671,6 +671,20 @@
     gap: 10px;
   }
 
+  /* Tile view is a purely visual, more compact variant of the card layout.
+     It reuses exactly the same markup, so every task control - drag handle,
+     checkbox, subtasks toggle, tap targets - keeps working identically. */
+  .task-list.tile-view { gap: 6px; }
+  .task-list.tile-view .task { padding: 9px 12px; border-radius: 12px; }
+  .task-list.tile-view .task-top { margin-bottom: 2px; }
+  .task-list.tile-view .task-name { font-size: 0.92rem; }
+  .task-list.tile-view .task-bottom { gap: 7px; }
+  .task-list.tile-view .status { font-size: 0.68rem; padding: 2px 7px; }
+  .task-list.tile-view .task-duration { font-size: 0.76rem; }
+  .task-list.tile-view .task-tag-badge { font-size: 0.64rem; padding: 1px 7px; }
+  .task-list.tile-view .drag-handle { font-size: 1.1rem; padding: 8px 6px; margin: -8px -6px; }
+  .task-list.tile-view .task-section-header { margin-top: 4px; }
+
   .task {
     background-color: var(--surface);
     border-radius: 16px;
@@ -1249,6 +1263,10 @@
     cursor: default;
     color: var(--text-muted);
   }
+
+  /* One labelled group of choices within a settings detail page */
+  .settings-group { margin-top: 22px; }
+  .settings-group:first-child { margin-top: 0; }
 
   /* --- Task action popup --- */
   .overlay {
@@ -1845,7 +1863,7 @@
       <button class="settings-card" type="button" data-settings-page="appearance">Appearance<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="timer">Timer &amp; Focus<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="notifications">Notifications<span class="settings-card-chevron">›</span></button>
-      <button class="settings-card" type="button">Tasks<span class="settings-card-chevron">›</span></button>
+      <button class="settings-card" type="button" data-settings-page="tasks">Tasks<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Journal<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Data &amp; Sync<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">About<span class="settings-card-chevron">›</span></button>
@@ -1893,6 +1911,49 @@
       <div class="settings-hint" id="notificationManualSteps" style="display: none;">
         Couldn't open Android's settings automatically. To change them yourself:
         open your phone's <strong>Settings</strong> → <strong>Apps</strong> → <strong>One Task</strong> → <strong>Notifications</strong>.
+      </div>
+    </div>
+
+    <div id="settingsPageTasks" style="display: none;">
+      <div class="settings-group">
+        <div class="settings-section-title">Default Tag</div>
+        <!-- Built from the account's own tag list each time this page opens -->
+        <div class="settings-option-list" id="defaultTagOptions"></div>
+        <div class="settings-hint">Pre-selected when you add a task. You can still choose a different tag while adding or editing any task.</div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-section-title">Postpone Behaviour</div>
+        <div class="settings-option-list">
+          <button class="settings-option" type="button" data-postpone-default="on">Postpone incomplete tasks<span class="settings-option-check">✓</span></button>
+          <button class="settings-option" type="button" data-postpone-default="off">Leave them on their date<span class="settings-option-check">✓</span></button>
+        </div>
+        <div class="settings-hint">Sets the starting value of “Postpone if incomplete” for new tasks only. Every task keeps its own setting, which always wins and can be changed while adding or editing it.</div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-section-title">Completed Tasks</div>
+        <div class="settings-option-list">
+          <button class="settings-option" type="button" data-completed-tasks="show">Show in Done section<span class="settings-option-check">✓</span></button>
+          <button class="settings-option" type="button" data-completed-tasks="hide">Hide from the list<span class="settings-option-check">✓</span></button>
+        </div>
+        <div class="settings-hint">Hiding them only affects this list - completed tasks are still counted above it, and still there if you switch back.</div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-section-title">New Task Position</div>
+        <div class="settings-option-list">
+          <button class="settings-option" type="button" data-new-task-position="top">Top<span class="settings-option-check">✓</span></button>
+          <button class="settings-option" type="button" data-new-task-position="bottom">Bottom<span class="settings-option-check">✓</span></button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-section-title">Task View</div>
+        <div class="settings-option-list">
+          <button class="settings-option" type="button" data-task-view="card">Card<span class="settings-option-check">✓</span></button>
+          <button class="settings-option" type="button" data-task-view="tile">Tile<span class="settings-option-check">✓</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -2240,7 +2301,17 @@
   // device rather than of the account. Stored separately from task data, so
   // nothing here can touch tasks, journal entries or cloud sync.
   const PREFS_KEY = 'oneTaskAtATime_prefs';
-  const defaultPrefs = { theme: 'system', timerSound: true };
+  const defaultPrefs = {
+    theme: 'system',
+    timerSound: true,
+    // Task defaults. These are starting values for newly created tasks and
+    // display choices for the list - they never rewrite existing tasks.
+    defaultTag: null,
+    postponeByDefault: false,
+    completedTasks: 'show',
+    newTaskPosition: 'bottom',
+    taskView: 'card',
+  };
   let prefs = Object.assign({}, defaultPrefs);
 
   function loadPrefs() {
@@ -2412,6 +2483,8 @@
   const settingsPageAppearance = document.getElementById('settingsPageAppearance');
   const settingsPageTimer = document.getElementById('settingsPageTimer');
   const settingsPageNotifications = document.getElementById('settingsPageNotifications');
+  const settingsPageTasks = document.getElementById('settingsPageTasks');
+  const defaultTagOptions = document.getElementById('defaultTagOptions');
   const notificationSettingsBtn = document.getElementById('notificationSettingsBtn');
   const notificationPermissionState = document.getElementById('notificationPermissionState');
   const notificationHint = document.getElementById('notificationHint');
@@ -3689,6 +3762,13 @@
     const inProgressTasks = tasks.filter(t => t.status !== 'completed');
     const doneTasks = tasks.filter(t => t.status === 'completed');
 
+    // Everything done, with completed tasks hidden: say so rather than
+    // leaving what looks like an empty day.
+    if (inProgressTasks.length === 0 && prefs.completedTasks === 'hide') {
+      taskListEl.innerHTML = '<li class="empty-msg">All tasks completed.</li>';
+      return;
+    }
+
     if (inProgressTasks.length > 0) {
       const header = document.createElement('li');
       header.className = 'task-section-header';
@@ -3698,7 +3778,10 @@
       inProgressTasks.forEach(task => taskListEl.appendChild(buildTaskListItem(task)));
     }
 
-    if (doneTasks.length > 0) {
+    // Completed tasks can be hidden from the list. They're untouched - still
+    // stored, still counted in the progress label, and shown again the moment
+    // the setting is switched back.
+    if (doneTasks.length > 0 && prefs.completedTasks !== 'hide') {
       const header = document.createElement('li');
       header.className = 'task-section-header';
       header.dataset.group = 'done';
@@ -3835,9 +3918,9 @@
     resetTimerSectionUI();
 
     applyRepeatRuleToUI({ type: 'none' }, repeatTypeRow, repeatCustomBlock, repeatWeekdayRow, repeatEveryXInput, 'repeat-type-btn', 'repeat-custom-mode-btn', 'repeat-weekday-btn');
-    newTaskTag = null;
+    newTaskTag = effectiveDefaultTag(); // still freely changeable in the modal
     refreshAddTagRow();
-    postponeToggle.checked = false;
+    postponeToggle.checked = prefs.postponeByDefault; // just the starting value
 
     // Default the date to whichever date is currently being viewed
     newTaskDateKey = selectedDateKey;
@@ -3992,7 +4075,8 @@
     };
 
     if (!tasksByDate[newTaskDateKey]) tasksByDate[newTaskDateKey] = [];
-    tasksByDate[newTaskDateKey].push(newTask);
+    if (prefs.newTaskPosition === 'top') tasksByDate[newTaskDateKey].unshift(newTask);
+    else tasksByDate[newTaskDateKey].push(newTask);
 
     if (newTaskDateKey === selectedDateKey) {
       render(); // it landed on the date we're currently viewing - refresh the visible list
@@ -4971,6 +5055,7 @@
     appearance: { title: 'Appearance', el: settingsPageAppearance },
     timer: { title: 'Timer & Focus', el: settingsPageTimer },
     notifications: { title: 'Notifications', el: settingsPageNotifications },
+    tasks: { title: 'Tasks', el: settingsPageTasks },
   };
 
   function showSettingsSubView(pageKey) {
@@ -4983,6 +5068,7 @@
     if (pageKey === 'appearance') renderAppearancePage();
     if (pageKey === 'timer') renderTimerSoundPage();
     if (pageKey === 'notifications') renderNotificationsPage();
+    if (pageKey === 'tasks') renderTasksSettingsPage();
     settingsView.style.display = 'none';
     settingsSubView.style.display = 'block';
     if (!settingsSubHistoryActive) {
@@ -5035,6 +5121,90 @@
     renderTimerSoundPage();
     if (prefs.timerSound) playTimerCompletionSound(); // preview what was just turned on
   });
+
+  // ---- Tasks settings ----
+  // The saved default tag can belong to an account that isn't signed in here
+  // any more, so it's always checked against the current tag list before use.
+  function effectiveDefaultTag() {
+    return (prefs.defaultTag && allTags().includes(prefs.defaultTag)) ? prefs.defaultTag : null;
+  }
+
+  function renderDefaultTagOptions() {
+    defaultTagOptions.innerHTML = '';
+    const current = effectiveDefaultTag();
+    [{ value: null, label: 'No tag' }].concat(allTags().map((t) => ({ value: t, label: t })))
+      .forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'settings-option' + (opt.value === current ? ' selected' : '');
+        btn.appendChild(document.createTextNode(opt.label));
+        const check = document.createElement('span');
+        check.className = 'settings-option-check';
+        check.textContent = '✓';
+        btn.appendChild(check);
+        btn.addEventListener('click', () => {
+          prefs.defaultTag = opt.value;
+          savePrefs();
+          renderDefaultTagOptions();
+        });
+        defaultTagOptions.appendChild(btn);
+      });
+  }
+
+  // Marks the chosen option in a group of [data-<attr>] buttons.
+  function markSelectedOption(attr, value) {
+    settingsPageTasks.querySelectorAll('[data-' + attr + ']').forEach((btn) => {
+      btn.classList.toggle('selected', btn.dataset[attr.replace(/-(.)/g, (m, c) => c.toUpperCase())] === value);
+    });
+  }
+
+  function renderTasksSettingsPage() {
+    renderDefaultTagOptions();
+    markSelectedOption('postpone-default', prefs.postponeByDefault ? 'on' : 'off');
+    markSelectedOption('completed-tasks', prefs.completedTasks);
+    markSelectedOption('new-task-position', prefs.newTaskPosition);
+    markSelectedOption('task-view', prefs.taskView);
+  }
+
+  settingsPageTasks.querySelectorAll('[data-postpone-default]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      prefs.postponeByDefault = btn.dataset.postponeDefault === 'on';
+      savePrefs();
+      renderTasksSettingsPage();
+    });
+  });
+
+  settingsPageTasks.querySelectorAll('[data-completed-tasks]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      prefs.completedTasks = btn.dataset.completedTasks;
+      savePrefs();
+      renderTasksSettingsPage();
+      renderTaskList(); // the Done section appears/disappears straight away
+    });
+  });
+
+  settingsPageTasks.querySelectorAll('[data-new-task-position]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      prefs.newTaskPosition = btn.dataset.newTaskPosition;
+      savePrefs();
+      renderTasksSettingsPage();
+    });
+  });
+
+  settingsPageTasks.querySelectorAll('[data-task-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      prefs.taskView = btn.dataset.taskView;
+      savePrefs();
+      applyTaskView();
+      renderTasksSettingsPage();
+    });
+  });
+
+  function applyTaskView() {
+    taskListEl.classList.toggle('tile-view', prefs.taskView === 'tile');
+  }
+
+  applyTaskView();
 
   // ---- Notifications ----
   function notificationPermission() {
