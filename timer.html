@@ -1962,9 +1962,19 @@
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
     console.error('Could not set auth persistence:', err);
   });
+  // Offline support: cache Firestore data on-device and queue writes made
+  // while offline, sending them automatically once back online. This is
+  // what lets the app stay usable (read + make changes) with no connection.
+  db.enablePersistence().catch((err) => {
+    // 'failed-precondition' = another tab already has persistence open;
+    // 'unimplemented' = browser doesn't support it. Either way the app
+    // still works, just without the offline cache.
+    console.error('Could not enable offline persistence:', err.code);
+  });
 
   let currentUid = null;
   let cloudSyncTimer = null;
+  let cloudUnsubscribe = null; // stops the live listener started by startCloudListener()
 
   // Every local cache key is namespaced by the signed-in account's uid, so
   // switching accounts on the same device (or a fresh sign-up) never sees
@@ -1985,6 +1995,10 @@
                              // whichever account happens to be signed in 1.2s later.
     clearTimeout(cloudSyncTimer);
     cloudSyncTimer = setTimeout(() => {
+      cloudSyncTimer = null; // marks "no local write still waiting to go out" - the
+                              // live cloud listener below uses this to know it's safe
+                              // to accept an incoming update without clobbering a
+                              // not-yet-sent local edit.
       if (currentUid !== uid) return; // account changed since this was scheduled - drop it
       db.collection('users').doc(uid).set({
         tasksByDate,
@@ -1995,6 +2009,72 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }).catch((e) => console.error('Cloud sync failed:', e));
     }, 1200);
+  }
+
+  // Applies a freshly-loaded cloud document to local state (used both for
+  // the initial load and every live update from startCloudListener below).
+  // Returns true if reconcileAllTimers() found a timer that finished while
+  // this device wasn't watching it, so the caller can decide to persist
+  // that correction.
+  function applyCloudData(d) {
+    tasksByDate = d.tasksByDate || {};
+    nextId = d.nextId || 1;
+    journalByDate = d.journalByDate || {};
+    nextJournalId = d.nextJournalId || 1;
+    customTags = d.customTags || [];
+    return reconcileAllTimers();
+  }
+
+  // Live updates from this same account signed in elsewhere (another device,
+  // or another tab). Firestore's own offline cache means this also fires
+  // immediately from cache when offline, so there's no separate offline
+  // code path to write here - reads just keep working from the last known
+  // data, and any local changes queue automatically and flush once back
+  // online (see enablePersistence() above).
+  //
+  // Two guards keep this from fighting with this device's own writes:
+  // - hasPendingWrites: true means this snapshot is just this device's own
+  //   not-yet-server-confirmed write echoing back - ignore it, it's not new.
+  // - cloudSyncTimer: non-null means a local edit is queued to send in the
+  //   next moment - skip this update and let that local edit win, rather
+  //   than overwrite it with what's still (briefly) an older cloud version.
+  // Together with the whole-document write in scheduleCloudSync(), this
+  // makes the sync strategy "last write wins" at the document level - the
+  // simplest strategy that fits a single-owner app like this, where two
+  // devices editing the exact same thing within the same second or two is
+  // rare and low-stakes. It never corrupts data (every write is a complete,
+  // consistent snapshot); the rarer case is just that the later save wins.
+  function startCloudListener(uid) {
+    stopCloudListener(); // never run two listeners at once
+    cloudUnsubscribe = db.collection('users').doc(uid).onSnapshot((snap) => {
+      if (currentUid !== uid) return; // stale listener from an account we've since left
+      if (!snap.exists) return; // nothing written yet (e.g. brand-new account)
+      if (snap.metadata.hasPendingWrites) return;
+      if (cloudSyncTimer) return;
+
+      const fixedATimer = applyCloudData(snap.data());
+      processPostponements();
+      materializeRecurringTasksForDate(selectedDateKey);
+      if (!tasksByDate[selectedDateKey]) tasksByDate[selectedDateKey] = [];
+      tasks = tasksByDate[selectedDateKey];
+      // Refresh the screen WITHOUT going through render() here, since
+      // render() also unconditionally saves - which would immediately
+      // schedule a write of the data we just received right back to the
+      // cloud, forever keeping cloudSyncTimer non-null and permanently
+      // blocking this same guard from ever accepting an update again.
+      updateFocusScreen();
+      renderTaskList();
+      updateProgressLabel();
+      updateDateBar();
+      if (fixedATimer) scheduleCloudSync(); // share a timer-completion correction back to the cloud
+    }, (err) => console.error('Cloud listener error:', err));
+  }
+
+  function stopCloudListener() {
+    if (cloudUnsubscribe) {
+      cloudUnsubscribe();
+      cloudUnsubscribe = null;
+    }
   }
 
   // ---- Element references ----
@@ -2109,10 +2189,12 @@
   let tasks = [];            // reference into tasksByDate[selectedDateKey]
   let activeTaskId = null;   // which task is currently shown in the main timer
   let timerId = null;        // the running countdown (like before)
-  let timerEndTimestamp = null; // real wall-clock time the active timer should hit 0 -
-                                 // lets the countdown "catch up" correctly after Android
-                                 // freezes the app in the background, instead of just
-                                 // freezing in place until it's reopened
+  // The active task's own timerEndsAt field (real wall-clock time the countdown
+  // should hit 0) is what lets it "catch up" correctly after Android freezes the
+  // app in the background, after fully closing/reopening the app, or after the
+  // same account opens the app on a different device - see the timer engine
+  // below. It lives on the task object (not a separate variable here) so it's
+  // saved and synced to the cloud along with everything else.
   let nextId = 1;            // simple counter to give each task a unique id
 
   // ---- Date helpers ----
@@ -2210,6 +2292,7 @@
           name: template.name,
           durationSeconds: template.durationSeconds,
           remainingSeconds: template.durationSeconds,
+          timerEndsAt: null,
           status: 'not-started',
           subtasks: (template.subtasks || []).map(s => ({ id: s.id, name: s.name, completed: false })),
           tag: template.tag || null,
@@ -3499,6 +3582,7 @@
       name: name,
       durationSeconds: seconds,
       remainingSeconds: seconds,
+      timerEndsAt: null, // set while the countdown is actively running - see the timer engine
       status: 'not-started',
       subtasks: subtasks,
       tag: newTaskTag,
@@ -3535,6 +3619,7 @@
     showFocusView();
     renderFocusSubtasks(task);
     runInterval();
+    saveTasks(); // persist the fresh start/resume timestamp (and status, if just started)
     ensureNotificationPermission();
     updateActiveNotification(task, false);
   }
@@ -3857,6 +3942,7 @@
       }
       task.durationSeconds = null;
       task.remainingSeconds = null;
+      task.timerEndsAt = null;
       // A no-timer task can only ever be "Not Started" or "Done"
       if (task.status === 'in-progress') task.status = 'not-started';
     }
@@ -4038,6 +4124,15 @@
   }
 
   // ---- Timer engine (works on whichever task is active) ----
+  // The countdown is anchored to task.timerEndsAt (a real wall-clock
+  // timestamp), not to counting down a number every second. That single
+  // timestamp is enough to recompute the correct remaining time from
+  // scratch at any point - after the app was backgrounded, fully closed
+  // and reopened, or opened on a different device - so there is no need
+  // to save/sync anything on every 1s tick. Persistence only happens at
+  // real transitions (start, pause, resume, reset, completion), each of
+  // which calls saveTasks() explicitly at its own call site.
+
   // Recomputes remainingSeconds from the real end-time (rather than trusting
   // that a tick fired every second) and handles completion. Shared by the
   // regular 1s interval tick and the "app just came back to foreground"
@@ -4045,13 +4140,13 @@
   function syncTimerToRealTime() {
     const task = getActiveTask();
     if (!task) { stopInterval(); return; }
-    if (timerEndTimestamp !== null) {
-      task.remainingSeconds = Math.max(0, Math.round((timerEndTimestamp - Date.now()) / 1000));
+    if (task.timerEndsAt !== null) {
+      task.remainingSeconds = Math.max(0, Math.round((task.timerEndsAt - Date.now()) / 1000));
     }
 
     if (task.remainingSeconds > 0) {
       updateFocusScreen(); // lightweight - won't disturb a drag in progress
-      saveTasks();
+      // No save here on purpose - see note above the function.
       // Refresh the notification every 10s (not every second - avoids
       // spamming the notification system and draining battery)
       if (task.remainingSeconds % 10 === 0) {
@@ -4059,9 +4154,11 @@
       }
     } else {
       task.status = 'completed';
+      task.timerEndsAt = null;
       stopInterval();
       clearActiveNotification();
       showCompletionNotification(task);
+      saveTasks(); // completion is a real transition - persist it
       render();
       // Stay in Focus Mode context - show the completion popup instead
       // of silently dropping back to the list
@@ -4075,14 +4172,46 @@
     const task = getActiveTask();
     // Anchor to a real end-time based on whatever remainingSeconds is right
     // now (works whether this is a fresh start, a resume, or a restart).
-    if (task) timerEndTimestamp = Date.now() + task.remainingSeconds * 1000;
+    // Persisted on the task itself so any device can reconstruct the
+    // countdown later without needing further writes while it runs.
+    if (task) task.timerEndsAt = Date.now() + task.remainingSeconds * 1000;
     timerId = setInterval(syncTimerToRealTime, 1000);
   }
 
   function stopInterval() {
     clearInterval(timerId);
     timerId = null;
-    timerEndTimestamp = null;
+    const task = getActiveTask();
+    if (task && task.timerEndsAt !== null) {
+      // Freeze remainingSeconds at exactly where the countdown stopped.
+      task.remainingSeconds = Math.max(0, Math.round((task.timerEndsAt - Date.now()) / 1000));
+      task.timerEndsAt = null;
+    }
+  }
+
+  // Fixes up any task whose timerEndsAt already passed while this device
+  // was closed, backgrounded, or before this account's data had loaded here
+  // (including one completed by a countdown that finished on another
+  // device). Called after any fresh load of cloud data. Returns true if it
+  // changed anything, so the caller knows whether to persist/re-render.
+  function reconcileAllTimers() {
+    let changed = false;
+    Object.keys(tasksByDate).forEach((dateKey) => {
+      tasksByDate[dateKey].forEach((task) => {
+        if (task.timerEndsAt == null) return;
+        const remaining = Math.round((task.timerEndsAt - Date.now()) / 1000);
+        if (remaining > 0) {
+          task.remainingSeconds = remaining; // still genuinely running - just refresh the number
+        } else {
+          task.status = 'completed';
+          task.remainingSeconds = 0;
+          task.timerEndsAt = null;
+          if (task.id === activeTaskId) stopInterval();
+          changed = true;
+        }
+      });
+    });
+    return changed;
   }
 
   // If Android freezes the page's JS while backgrounded, any queued ticks
@@ -4110,6 +4239,7 @@
       focusPauseBtn.textContent = 'Pause';
       if (active) updateActiveNotification(active, false);
     }
+    saveTasks(); // persist the pause (frozen remaining time) or resume (fresh end timestamp)
   });
 
   // Reset stops the countdown and restores the task's full original duration
@@ -4118,8 +4248,10 @@
     if (!active) return;
     stopInterval();
     active.remainingSeconds = active.durationSeconds;
+    active.timerEndsAt = null;
     focusPauseBtn.textContent = 'Resume'; // timer is stopped after reset, so it needs a fresh press to start
     updateActiveNotification(active, true);
+    saveTasks();
     render();
   });
 
@@ -4145,6 +4277,7 @@
     focusPauseBtn.textContent = 'Pause';
     render();
     runInterval();
+    saveTasks();
     updateActiveNotification(task, false);
   });
 
@@ -4163,6 +4296,7 @@
     activeTaskId = null;
     focusPauseBtn.textContent = 'Pause'; // reset label for next time
     clearActiveNotification();
+    saveTasks();
     render();
     showListView();
   });
@@ -4177,6 +4311,8 @@
     const task = tasks.find(t => t.id === menuTaskId);
     if (task) {
       task.remainingSeconds = task.durationSeconds; // NOT 00:00 - back to the original duration
+      task.timerEndsAt = null;
+      saveTasks();
       render();
     }
     closeTaskMenu();
@@ -4682,18 +4818,14 @@
     try {
       const snap = await db.collection('users').doc(uid).get();
       if (snap.exists && snap.data()) {
-        const d = snap.data();
-        tasksByDate = d.tasksByDate || {};
-        nextId = d.nextId || 1;
-        journalByDate = d.journalByDate || {};
-        nextJournalId = d.nextJournalId || 1;
-        customTags = d.customTags || [];
+        applyCloudData(snap.data());
       } else {
         // First login ever for this account: bring across whatever's
         // already on this device (if anything) as a starting point.
         loadTasks();
         loadJournal();
         loadCustomTags();
+        reconcileAllTimers();
       }
     } catch (e) {
       // Offline or an error talking to Firestore — fall back to whatever's
@@ -4702,6 +4834,7 @@
       loadTasks();
       loadJournal();
       loadCustomTags();
+      reconcileAllTimers();
     }
 
     processPostponements();
@@ -4718,8 +4851,13 @@
     appRootEl.style.display = 'block';
 
     // Push current state up right away (harmless if already in sync, and
-    // is what actually creates the cloud document on a first-ever login).
+    // is what actually creates the cloud document on a first-ever login,
+    // and also persists anything reconcileAllTimers() just fixed up).
     scheduleCloudSync();
+
+    // Now that the initial load has finished, start listening for live
+    // updates from this same account signed in on another device/tab.
+    startCloudListener(uid);
   }
 
   auth.onAuthStateChanged((user) => {
@@ -4733,6 +4871,8 @@
       currentUid = null;
       clearTimeout(cloudSyncTimer); // don't let a pending write from the account that just
                                      // logged out land in whichever account signs in next
+      cloudSyncTimer = null;
+      stopCloudListener(); // don't keep receiving the old account's live updates
       showLoginScreen();
     }
   });
