@@ -1394,6 +1394,19 @@
     margin-top: 6px;
   }
 
+  .auth-forgot-link {
+    display: block;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: -4px 0 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2F6FD6;
+    cursor: pointer;
+    text-align: right;
+  }
+
   .auth-btn-row .login-btn {
     width: auto;
     padding: 12px 28px;
@@ -1446,8 +1459,35 @@
         <button type="button" class="auth-password-toggle" data-target="authLoginPassword">Show</button>
       </div>
 
+      <button type="button" id="authForgotPasswordBtn" class="auth-forgot-link">Forgot Password?</button>
+
       <div class="auth-btn-row">
         <button id="authLoginSubmitBtn" class="login-btn login-btn-primary">Log In</button>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="authForgotPasswordPanel" class="auth-panel" style="display: none;">
+      <div class="app-header">
+        <button id="authForgotPasswordBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+        <h1>Forgot Password</h1>
+      </div>
+      <div id="authForgotPasswordError" class="auth-error"></div>
+
+      <label class="auth-label" for="authForgotPasswordEmail">Email Address</label>
+      <input type="email" id="authForgotPasswordEmail" class="login-input" autocomplete="email">
+
+      <div class="auth-btn-row">
+        <button id="authForgotPasswordSendBtn" class="login-btn login-btn-primary">Send Reset Link</button>
+      </div>
+    </div>
+
+    <!-- RESET LINK SENT -->
+    <div id="authResetSentPanel" class="auth-panel" style="display: none;">
+      <h1>Check your email</h1>
+      <div class="auth-success-text">We've sent you a password reset link.</div>
+      <div class="auth-btn-row">
+        <button id="authResetSentBackBtn" class="login-btn login-btn-primary">Back to Log In</button>
       </div>
     </div>
 
@@ -1908,6 +1948,11 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
+  // Explicit local persistence: keep the user signed in across app/browser
+  // restarts (this is also the web SDK's default, stated here for clarity).
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
+    console.error('Could not set auth persistence:', err);
+  });
 
   let currentUid = null;
   let cloudSyncTimer = null;
@@ -4383,12 +4428,15 @@
     signup1: document.getElementById('authSignupStep1Panel'),
     signup2: document.getElementById('authSignupStep2Panel'),
     created: document.getElementById('authAccountCreatedPanel'),
+    forgotPassword: document.getElementById('authForgotPasswordPanel'),
+    resetSent: document.getElementById('authResetSentPanel'),
   };
   const authErrors = {
     landing: document.getElementById('authLandingError'),
     login: document.getElementById('authLoginError'),
     signup1: document.getElementById('authSignupStep1Error'),
     signup2: document.getElementById('authSignupStep2Error'),
+    forgotPassword: document.getElementById('authForgotPasswordError'),
   };
 
   const authLoginBtn = document.getElementById('authLoginBtn');
@@ -4406,6 +4454,11 @@
   const authSignupConfirmPassword = document.getElementById('authSignupConfirmPassword');
   const authSignupStep2NextBtn = document.getElementById('authSignupStep2NextBtn');
   const authGoToLoginBtn = document.getElementById('authGoToLoginBtn');
+  const authForgotPasswordBtn = document.getElementById('authForgotPasswordBtn');
+  const authForgotPasswordBackBtn = document.getElementById('authForgotPasswordBackBtn');
+  const authForgotPasswordEmail = document.getElementById('authForgotPasswordEmail');
+  const authForgotPasswordSendBtn = document.getElementById('authForgotPasswordSendBtn');
+  const authResetSentBackBtn = document.getElementById('authResetSentBackBtn');
 
   let signupEmail = ''; // carried from Step 1 to the Firebase call after Step 2
 
@@ -4425,7 +4478,8 @@
       'auth/email-already-in-use': 'An account already exists with that email.',
       'auth/weak-password': 'Password should be at least 6 characters.',
       'auth/popup-closed-by-user': 'Sign-in was cancelled.',
-      'auth/network-request-failed': 'Network error — check your connection.'
+      'auth/network-request-failed': 'Network error — check your connection.',
+      'auth/too-many-requests': 'Too many attempts. Please try again later.'
     };
     return map[err.code] || err.message || 'Something went wrong. Please try again.';
   }
@@ -4447,7 +4501,7 @@
   function resetAuthScreens() {
     authViewStack = [];
     signupEmail = '';
-    [authLoginEmail, authLoginPassword, authSignupEmail, authSignupPassword, authSignupConfirmPassword].forEach((el) => { el.value = ''; });
+    [authLoginEmail, authLoginPassword, authSignupEmail, authSignupPassword, authSignupConfirmPassword, authForgotPasswordEmail].forEach((el) => { el.value = ''; });
     Object.values(authErrors).forEach((el) => { el.textContent = ''; });
     document.querySelectorAll('.auth-password-toggle').forEach(resetPasswordToggle);
     showAuthPanel('landing');
@@ -4559,6 +4613,37 @@
   });
 
   authGoToLoginBtn.addEventListener('click', () => replaceAuthView('login'));
+
+  authForgotPasswordBtn.addEventListener('click', () => {
+    authForgotPasswordEmail.value = authLoginEmail.value.trim();
+    pushAuthView('forgotPassword');
+  });
+  authForgotPasswordBackBtn.addEventListener('click', () => history.back());
+
+  authForgotPasswordSendBtn.addEventListener('click', () => {
+    authErrors.forgotPassword.textContent = '';
+    const email = authForgotPasswordEmail.value.trim();
+    if (!email) {
+      authErrors.forgotPassword.textContent = 'Please enter your email address.';
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      authErrors.forgotPassword.textContent = 'That email address looks invalid.';
+      return;
+    }
+    authForgotPasswordSendBtn.disabled = true;
+    auth.sendPasswordResetEmail(email)
+      .then(() => {
+        authForgotPasswordSendBtn.disabled = false;
+        pushAuthView('resetSent');
+      })
+      .catch((err) => {
+        authForgotPasswordSendBtn.disabled = false;
+        authErrors.forgotPassword.textContent = friendlyAuthError(err);
+      });
+  });
+
+  authResetSentBackBtn.addEventListener('click', () => replaceAuthView('login'));
 
   googleSignInBtn.addEventListener('click', () => {
     authErrors.landing.textContent = '';
