@@ -848,12 +848,12 @@
     height: auto;
   }
 
-  /* The calendar icon is a blue glyph on a light background, which reads as a
-     bright white block in dark mode. Inverting lightness and rotating the hue
-     back keeps it blue while letting it sit on the dark surface. */
-  :root[data-theme="dark"] .calendar-btn-icon {
-    filter: invert(1) hue-rotate(180deg);
-  }
+  /* Each theme has its own calendar artwork. Both are in the markup and the
+     theme picks one in CSS, so the right icon is there from the first paint
+     rather than being swapped in afterwards. */
+  .calendar-icon-dark { display: none; }
+  :root[data-theme="dark"] .calendar-icon-light { display: none; }
+  :root[data-theme="dark"] .calendar-icon-dark { display: block; }
 
   .journal-back-btn {
     position: absolute;
@@ -872,6 +872,9 @@
     transform: translateY(-50%);
     background: none;
     border: none;
+    /* Buttons don't inherit the page colour, so this is set explicitly to
+       match the screen title in both themes. */
+    color: var(--accent);
     font-size: 1.4rem;
     cursor: pointer;
     padding: 10px 14px;
@@ -1757,7 +1760,7 @@
   <div class="app-header" id="mainAppHeader">
     <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">☰</button>
     <h1 id="mainHeaderTitle">Task List</h1>
-    <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon"></button>
+    <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon calendar-icon-light"><img src="calendar-icon-dark.png" alt="" class="calendar-btn-icon calendar-icon-dark"></button>
   </div>
 
   <!-- LIST VIEW: shown by default, hidden while a task is in focus -->
@@ -1813,7 +1816,7 @@
     <div class="app-header">
       <button id="journalHamburgerBtn" class="hamburger-btn" aria-label="Open menu">☰</button>
       <h1>Journal</h1>
-      <button id="journalCalendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon"></button>
+      <button id="journalCalendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon calendar-icon-light"><img src="calendar-icon-dark.png" alt="" class="calendar-btn-icon calendar-icon-dark"></button>
     </div>
     <div class="journal-date-label" id="journalDateLabel">Today</div>
     <div class="journal-notes-list" id="journalNotesList"></div>
