@@ -811,6 +811,10 @@
     border-radius: 12px;
     padding: 14px;
     cursor: pointer;
+    /* Long-press opens an action menu - this stops the OS text-selection
+       bubble from popping up mid-press and hijacking the gesture. */
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .journal-note-title {
@@ -896,6 +900,17 @@
     font-size: 1rem;
     line-height: 1.6;
     color: #F2EFE9;
+    /* Some mobile WebViews still draw their native multiline-text-field
+       chrome (an inset edge + scrollbar track) even with border:none -
+       this strips that so the writing area has no visible edge. */
+    -webkit-appearance: none;
+    appearance: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .note-content-input::-webkit-scrollbar {
+    display: none;
   }
 
   .note-content-input::placeholder {
@@ -1105,12 +1120,17 @@
     color: #C7D6D2;
   }
 
+  /* Positioned in the Note Editor's header (see .calendar-btn for the
+     shared right-aligned placement); kept small and rectangular per the
+     Journal/Note redesign, instead of the old full-width bottom button. */
   .note-save-btn {
-    display: block;
-    width: 100%;
-    padding: 16px 24px;
-    margin-top: 20px;
-    border-radius: 10px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background-color: #9FD8CB;
+    color: #1B2A32;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
   }
 
   /* --- Login Screen --- */
@@ -1305,6 +1325,7 @@
     <div class="app-header">
       <button id="journalBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
       <h1>Journal</h1>
+      <button id="journalMenuBtn" class="calendar-btn note-menu-btn journal-btn" aria-label="Journal options">⋮</button>
       <button id="journalCalendarBtn" class="calendar-btn" aria-label="Open calendar">📅</button>
     </div>
     <div class="journal-date-label" id="journalDateLabel">Today</div>
@@ -1316,29 +1337,75 @@
     <div class="app-header">
       <button id="noteBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
       <h1>Note</h1>
-      <button id="noteMenuBtn" class="calendar-btn note-menu-btn" style="display: none;" aria-label="Note options">⋮</button>
+      <button class="calendar-btn note-save-btn" id="noteSaveBtn">Save</button>
     </div>
     <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Title" autocomplete="off" autocapitalize="sentences" spellcheck="false" name="note-title-nofill">
     <textarea id="noteContentInput" class="note-content-input" placeholder="Write your note..."></textarea>
-    <button class="menu-btn note-save-btn" id="noteSaveBtn">Save</button>
+  </div>
+
+  <!-- ARCHIVE VIEW: notes the user archived, listed with their original Journal date -->
+  <div id="archiveView" style="display: none;">
+    <div class="app-header">
+      <button id="archiveBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1>Archive</h1>
+    </div>
+    <div class="journal-notes-list" id="archiveNotesList"></div>
+  </div>
+
+  <!-- RECYCLE BIN VIEW: notes deleted from the Journal, pending permanent removal -->
+  <div id="binView" style="display: none;">
+    <div class="app-header">
+      <button id="binBackBtn" class="calendar-btn journal-back-btn" aria-label="Back">←</button>
+      <h1>Recycle Bin</h1>
+    </div>
+    <div class="journal-notes-list" id="binNotesList"></div>
   </div>
 </div>
 
-<!-- Small options menu for an existing note (three-dot menu) -->
+<!-- Long-press action menu for a Journal note card -->
 <div class="overlay" id="noteOptionsOverlay">
   <div class="menu">
-    <button class="menu-btn danger" id="noteDeleteOptionBtn">🗑 Delete Note</button>
+    <button class="menu-btn" id="noteArchiveOptionBtn">🗄 Archive</button>
+    <button class="menu-btn danger" id="noteDeleteOptionBtn">🗑 Delete</button>
     <button class="menu-btn cancel" id="noteOptionsCancelBtn">Cancel</button>
   </div>
 </div>
 
-<!-- Confirmation before permanently deleting a note -->
+<!-- Confirmation before moving a note to the Recycle Bin -->
 <div class="overlay" id="noteDeleteOverlay">
   <div class="menu">
     <div class="menu-title">Delete this note?</div>
     <div class="menu-subtext">This action can't be undone.</div>
     <button class="menu-btn danger" id="noteDeleteConfirmBtn">Delete</button>
     <button class="menu-btn cancel" id="noteDeleteCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Action menu for a note inside the Archive or Recycle Bin -->
+<div class="overlay" id="archivedActionOverlay">
+  <div class="menu">
+    <button class="menu-btn" id="restoreNoteOptionBtn">↩ Restore</button>
+    <button class="menu-btn danger" id="permanentDeleteOptionBtn" style="display: none;">🗑 Delete Permanently</button>
+    <button class="menu-btn cancel" id="archivedActionCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Confirmation before permanently deleting a note from the Recycle Bin -->
+<div class="overlay" id="permanentDeleteOverlay">
+  <div class="menu">
+    <div class="menu-title">Permanently delete this note?</div>
+    <div class="menu-subtext">This action can't be undone.</div>
+    <button class="menu-btn danger" id="permanentDeleteConfirmBtn">Delete Permanently</button>
+    <button class="menu-btn cancel" id="permanentDeleteCancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- Journal header menu (Archive / Recycle Bin) -->
+<div class="overlay" id="journalMenuOverlay">
+  <div class="menu">
+    <button class="menu-btn" id="openArchiveBtn">🗄 Archive</button>
+    <button class="menu-btn" id="openBinBtn">🗑 Recycle Bin</button>
+    <button class="menu-btn cancel" id="journalMenuCancelBtn">Cancel</button>
   </div>
 </div>
 
@@ -1614,6 +1681,7 @@
   const journalBtn = document.getElementById('journalBtn');
   const journalView = document.getElementById('journalView');
   const journalBackBtn = document.getElementById('journalBackBtn');
+  const journalMenuBtn = document.getElementById('journalMenuBtn');
   const journalCalendarBtn = document.getElementById('journalCalendarBtn');
   const journalDateLabel = document.getElementById('journalDateLabel');
   const journalNotesList = document.getElementById('journalNotesList');
@@ -1623,13 +1691,30 @@
   const noteContentInput = document.getElementById('noteContentInput');
   const noteSaveBtn = document.getElementById('noteSaveBtn');
   const addNoteFab = document.getElementById('addNoteFab');
-  const noteMenuBtn = document.getElementById('noteMenuBtn');
   const noteOptionsOverlay = document.getElementById('noteOptionsOverlay');
+  const noteArchiveOptionBtn = document.getElementById('noteArchiveOptionBtn');
   const noteDeleteOptionBtn = document.getElementById('noteDeleteOptionBtn');
   const noteOptionsCancelBtn = document.getElementById('noteOptionsCancelBtn');
   const noteDeleteOverlay = document.getElementById('noteDeleteOverlay');
   const noteDeleteConfirmBtn = document.getElementById('noteDeleteConfirmBtn');
   const noteDeleteCancelBtn = document.getElementById('noteDeleteCancelBtn');
+  const archiveView = document.getElementById('archiveView');
+  const archiveBackBtn = document.getElementById('archiveBackBtn');
+  const archiveNotesList = document.getElementById('archiveNotesList');
+  const binView = document.getElementById('binView');
+  const binBackBtn = document.getElementById('binBackBtn');
+  const binNotesList = document.getElementById('binNotesList');
+  const journalMenuOverlay = document.getElementById('journalMenuOverlay');
+  const openArchiveBtn = document.getElementById('openArchiveBtn');
+  const openBinBtn = document.getElementById('openBinBtn');
+  const journalMenuCancelBtn = document.getElementById('journalMenuCancelBtn');
+  const archivedActionOverlay = document.getElementById('archivedActionOverlay');
+  const restoreNoteOptionBtn = document.getElementById('restoreNoteOptionBtn');
+  const permanentDeleteOptionBtn = document.getElementById('permanentDeleteOptionBtn');
+  const archivedActionCancelBtn = document.getElementById('archivedActionCancelBtn');
+  const permanentDeleteOverlay = document.getElementById('permanentDeleteOverlay');
+  const permanentDeleteConfirmBtn = document.getElementById('permanentDeleteConfirmBtn');
+  const permanentDeleteCancelBtn = document.getElementById('permanentDeleteCancelBtn');
   const focusName = document.getElementById('focusName');
   const focusDisplay = document.getElementById('focusDisplay');
   const focusPauseBtn = document.getElementById('focusPauseBtn');
@@ -1877,7 +1962,11 @@
   }
 
   // ---- Journal (date-based notes, separate from tasks) ----
-  let journalByDate = {};       // { "2026-09-13": [{id, title, content}, ...] }
+  // note.status is undefined/absent for a normal note, 'archived', or
+  // 'deleted' (Recycle Bin) - the note never actually moves out of its
+  // original date's array, so restoring it always lands back on the same
+  // Journal date automatically.
+  let journalByDate = {};       // { "2026-09-13": [{id, title, content, status?}, ...] }
   let journalSelectedDateKey = todayKey();
   let nextJournalId = 1;
   let editingNoteId = null;     // which note is open in the editor (null = creating a new one)
@@ -1898,11 +1987,150 @@
     if (savedNextId) nextJournalId = Number(savedNextId);
   }
 
+  // ---- Note status helpers (normal Journal vs Archive vs Recycle Bin) ----
+  function getVisibleNotesForDate(dateKey) {
+    return (journalByDate[dateKey] || []).filter((n) => !n.status);
+  }
+  function dateHasVisibleNote(dateKey) {
+    return (journalByDate[dateKey] || []).some((n) => !n.status);
+  }
+  function findNoteByDateAndId(dateKey, id) {
+    const arr = journalByDate[dateKey];
+    return arr ? arr.find((n) => n.id === id) : null;
+  }
+  function archiveNoteAt(dateKey, id) {
+    const note = findNoteByDateAndId(dateKey, id);
+    if (note) { note.status = 'archived'; saveJournal(); }
+  }
+  function moveNoteToBin(dateKey, id) {
+    const note = findNoteByDateAndId(dateKey, id);
+    if (note) { note.status = 'deleted'; saveJournal(); }
+  }
+  function restoreNoteAt(dateKey, id) {
+    const note = findNoteByDateAndId(dateKey, id);
+    if (note) { delete note.status; saveJournal(); }
+  }
+  function permanentlyDeleteNoteAt(dateKey, id) {
+    const arr = journalByDate[dateKey];
+    if (!arr) return;
+    const index = arr.findIndex((n) => n.id === id);
+    if (index !== -1) arr.splice(index, 1);
+    saveJournal();
+  }
+  // Flattens every note with the given status across all dates, newest
+  // date first, for the Archive/Recycle Bin list views.
+  function collectNotesByStatus(status) {
+    const result = [];
+    Object.keys(journalByDate).sort().reverse().forEach((dateKey) => {
+      (journalByDate[dateKey] || []).forEach((note) => {
+        if (note.status === status) result.push({ dateKey, note });
+      });
+    });
+    return result;
+  }
+  function formatNoteDateLabel(dateKey) {
+    const d = keyToDate(dateKey);
+    return d.getDate() + ' ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  // ---- Long-press detection for Journal note cards ----
+  const LONG_PRESS_MS = 500;
+  let longPressTimer = null;
+  let longPressFired = false;
+  let longPressNoteCtx = null;   // { dateKey, id } - note the long-press menu is acting on
+  let secondaryNoteCtx = null;   // { dateKey, id, source: 'archive' | 'bin' } - for Archive/Bin item actions
+
+  function attachLongPress(el, onLongPress) {
+    const cancel = () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    };
+    el.addEventListener('pointerdown', () => {
+      longPressFired = false;
+      cancel();
+      longPressTimer = setTimeout(() => {
+        longPressFired = true;
+        onLongPress();
+      }, LONG_PRESS_MS);
+    });
+    el.addEventListener('pointerup', cancel);
+    el.addEventListener('pointerleave', cancel);
+    el.addEventListener('pointercancel', cancel);
+    // Stops Android's native long-press text-selection menu from also
+    // popping up and fighting with our own action menu.
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // Builds a note card for the Archive/Recycle Bin lists - same look as a
+  // normal Journal note card, but shows the note's original date instead
+  // of its saved time, and a tap opens that note's Restore/Delete menu
+  // instead of the editor.
+  function buildSecondaryNoteCard(dateKey, note, onTap) {
+    const card = document.createElement('div');
+    card.className = 'journal-note-card';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'journal-note-title';
+    titleEl.textContent = note.title || '(Untitled)';
+
+    const bottomRow = document.createElement('div');
+    bottomRow.className = 'journal-note-bottom-row';
+
+    const previewEl = document.createElement('div');
+    previewEl.className = 'journal-note-preview';
+    const flatContent = note.content.replace(/\s+/g, ' ').trim();
+    previewEl.textContent = flatContent.length > 80 ? flatContent.slice(0, 80) + '...' : flatContent;
+    bottomRow.appendChild(previewEl);
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'journal-note-time';
+    dateEl.textContent = formatNoteDateLabel(dateKey);
+    bottomRow.appendChild(dateEl);
+
+    card.appendChild(titleEl);
+    card.appendChild(bottomRow);
+    card.addEventListener('click', onTap);
+    return card;
+  }
+
+  function renderArchiveView() {
+    archiveNotesList.innerHTML = '';
+    const items = collectNotesByStatus('archived');
+    if (items.length === 0) {
+      archiveNotesList.innerHTML = '<div class="empty-msg">No archived notes.</div>';
+      return;
+    }
+    items.forEach(({ dateKey, note }) => {
+      archiveNotesList.appendChild(buildSecondaryNoteCard(dateKey, note, () => {
+        secondaryNoteCtx = { dateKey, id: note.id, source: 'archive' };
+        permanentDeleteOptionBtn.style.display = 'none';
+        archivedActionOverlay.classList.add('open');
+      }));
+    });
+  }
+
+  function renderBinView() {
+    binNotesList.innerHTML = '';
+    const items = collectNotesByStatus('deleted');
+    if (items.length === 0) {
+      binNotesList.innerHTML = '<div class="empty-msg">Recycle Bin is empty.</div>';
+      return;
+    }
+    items.forEach(({ dateKey, note }) => {
+      binNotesList.appendChild(buildSecondaryNoteCard(dateKey, note, () => {
+        secondaryNoteCtx = { dateKey, id: note.id, source: 'bin' };
+        permanentDeleteOptionBtn.style.display = 'block';
+        archivedActionOverlay.classList.add('open');
+      }));
+    });
+  }
+
   function showJournalView() {
     mainAppHeader.style.display = 'none';
     listView.style.display = 'none';
     focusView.style.display = 'none';
     noteEditView.style.display = 'none';
+    archiveView.style.display = 'none';
+    binView.style.display = 'none';
     journalView.style.display = 'block';
     addNoteFab.style.display = 'flex';
   }
@@ -1910,6 +2138,8 @@
   function hideJournalView() {
     journalView.style.display = 'none';
     noteEditView.style.display = 'none';
+    archiveView.style.display = 'none';
+    binView.style.display = 'none';
     addNoteFab.style.display = 'none';
     mainAppHeader.style.display = 'flex';
     listView.style.display = 'block';
@@ -1920,7 +2150,7 @@
     journalDateLabel.textContent = d.getDate() + ' ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getFullYear();
 
     journalNotesList.innerHTML = '';
-    const notes = journalByDate[journalSelectedDateKey] || [];
+    const notes = getVisibleNotesForDate(journalSelectedDateKey);
     if (notes.length === 0) {
       journalNotesList.innerHTML = '<div class="empty-msg">No notes yet. Tap + to add one.</div>';
       return;
@@ -1957,7 +2187,16 @@
 
       card.appendChild(titleEl);
       card.appendChild(bottomRow);
-      card.addEventListener('click', () => openNoteEditor(note));
+      card.addEventListener('click', () => {
+        // A long-press already opened the action menu for this tap -
+        // suppress the tap-to-open-editor that follows it on release.
+        if (longPressFired) { longPressFired = false; return; }
+        openNoteEditor(note);
+      });
+      attachLongPress(card, () => {
+        longPressNoteCtx = { dateKey: journalSelectedDateKey, id: note.id };
+        noteOptionsOverlay.classList.add('open');
+      });
       journalNotesList.appendChild(card);
     });
   }
@@ -1966,9 +2205,6 @@
     editingNoteId = note ? note.id : null;
     noteTitleInput.value = note ? note.title : '';
     noteContentInput.value = note ? note.content : '';
-    // The three-dot menu (with Delete Note) only makes sense for a note
-    // that's already saved - a brand-new, unsaved note has nothing to delete yet
-    noteMenuBtn.style.display = note ? 'block' : 'none';
     journalView.style.display = 'none';
     addNoteFab.style.display = 'none';
     noteEditView.style.display = 'block';
@@ -2038,17 +2274,25 @@
     }
   }
 
-  // ---- Note options menu (three-dot) and Delete Note ----
-  noteMenuBtn.addEventListener('click', () => {
-    noteOptionsOverlay.classList.add('open');
+  // ---- Long-press action menu on a Journal note card (Archive / Delete / Cancel) ----
+  noteArchiveOptionBtn.addEventListener('click', () => {
+    noteOptionsOverlay.classList.remove('open');
+    if (longPressNoteCtx) archiveNoteAt(longPressNoteCtx.dateKey, longPressNoteCtx.id);
+    longPressNoteCtx = null;
+    renderJournalView();
+    if (calendarOverlay.classList.contains('open')) renderCalendar();
   });
 
   noteOptionsCancelBtn.addEventListener('click', () => {
     noteOptionsOverlay.classList.remove('open');
+    longPressNoteCtx = null;
   });
 
   noteOptionsOverlay.addEventListener('click', (e) => {
-    if (e.target === noteOptionsOverlay) noteOptionsOverlay.classList.remove('open');
+    if (e.target === noteOptionsOverlay) {
+      noteOptionsOverlay.classList.remove('open');
+      longPressNoteCtx = null;
+    }
   });
 
   noteDeleteOptionBtn.addEventListener('click', () => {
@@ -2057,30 +2301,151 @@
   });
 
   noteDeleteCancelBtn.addEventListener('click', () => {
-    // Close the popup, note stays exactly as it was, editor remains open
     noteDeleteOverlay.classList.remove('open');
+    longPressNoteCtx = null;
   });
 
   noteDeleteOverlay.addEventListener('click', (e) => {
-    if (e.target === noteDeleteOverlay) noteDeleteOverlay.classList.remove('open');
+    if (e.target === noteDeleteOverlay) {
+      noteDeleteOverlay.classList.remove('open');
+      longPressNoteCtx = null;
+    }
   });
 
   noteDeleteConfirmBtn.addEventListener('click', () => {
     noteDeleteOverlay.classList.remove('open');
-    const notesForDate = journalByDate[journalSelectedDateKey];
-    if (notesForDate && editingNoteId != null) {
-      const index = notesForDate.findIndex(n => n.id === editingNoteId);
-      if (index !== -1) notesForDate.splice(index, 1); // removes ONLY this note
-      saveJournal();
-    }
-    // Close the editor WITHOUT auto-saving (the note is gone, not being saved)
-    // and return to the Journal page - the calendar dot will naturally
-    // disappear on its own next time it's opened, since it's only ever
-    // drawn when a date's note list is non-empty.
-    editingNoteId = null;
-    closeNoteEditor();
+    // Moves the note to the Recycle Bin rather than deleting it outright -
+    // the calendar dot for this date disappears the same way it always
+    // has, since the dot only ever counts notes with no status set.
+    if (longPressNoteCtx) moveNoteToBin(longPressNoteCtx.dateKey, longPressNoteCtx.id);
+    longPressNoteCtx = null;
     renderJournalView();
-    popNoteHistory();
+    if (calendarOverlay.classList.contains('open')) renderCalendar();
+  });
+
+  // ---- Journal header menu (Archive / Recycle Bin) ----
+  journalMenuBtn.addEventListener('click', () => {
+    journalMenuOverlay.classList.add('open');
+  });
+  journalMenuCancelBtn.addEventListener('click', () => {
+    journalMenuOverlay.classList.remove('open');
+  });
+  journalMenuOverlay.addEventListener('click', (e) => {
+    if (e.target === journalMenuOverlay) journalMenuOverlay.classList.remove('open');
+  });
+  openArchiveBtn.addEventListener('click', () => {
+    journalMenuOverlay.classList.remove('open');
+    showArchiveView();
+  });
+  openBinBtn.addEventListener('click', () => {
+    journalMenuOverlay.classList.remove('open');
+    showBinView();
+  });
+
+  // ---- Archive / Recycle Bin views ----
+  let archiveHistoryActive = false;
+  let binHistoryActive = false;
+
+  function showArchiveView() {
+    journalView.style.display = 'none';
+    addNoteFab.style.display = 'none';
+    archiveView.style.display = 'block';
+    renderArchiveView();
+    if (!archiveHistoryActive) {
+      try { history.pushState({ view: 'archive' }, ''); archiveHistoryActive = true; } catch (e) { /* see note above */ }
+    }
+  }
+  function hideArchiveView() {
+    archiveView.style.display = 'none';
+    journalView.style.display = 'block';
+    addNoteFab.style.display = 'flex';
+  }
+  function popArchiveHistory() {
+    if (archiveHistoryActive) {
+      archiveHistoryActive = false;
+      ignoreNextPopstate = true;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
+  }
+
+  function showBinView() {
+    journalView.style.display = 'none';
+    addNoteFab.style.display = 'none';
+    binView.style.display = 'block';
+    renderBinView();
+    if (!binHistoryActive) {
+      try { history.pushState({ view: 'bin' }, ''); binHistoryActive = true; } catch (e) { /* see note above */ }
+    }
+  }
+  function hideBinView() {
+    binView.style.display = 'none';
+    journalView.style.display = 'block';
+    addNoteFab.style.display = 'flex';
+  }
+  function popBinHistory() {
+    if (binHistoryActive) {
+      binHistoryActive = false;
+      ignoreNextPopstate = true;
+      try { history.back(); } catch (e) { /* see note above */ }
+    }
+  }
+
+  archiveBackBtn.addEventListener('click', () => {
+    hideArchiveView();
+    popArchiveHistory();
+  });
+  binBackBtn.addEventListener('click', () => {
+    hideBinView();
+    popBinHistory();
+  });
+
+  // ---- Action menu for a note inside the Archive or Recycle Bin ----
+  restoreNoteOptionBtn.addEventListener('click', () => {
+    archivedActionOverlay.classList.remove('open');
+    if (secondaryNoteCtx) {
+      restoreNoteAt(secondaryNoteCtx.dateKey, secondaryNoteCtx.id);
+      if (secondaryNoteCtx.source === 'archive') renderArchiveView(); else renderBinView();
+    }
+    secondaryNoteCtx = null;
+    if (calendarOverlay.classList.contains('open')) renderCalendar();
+  });
+
+  permanentDeleteOptionBtn.addEventListener('click', () => {
+    archivedActionOverlay.classList.remove('open');
+    permanentDeleteOverlay.classList.add('open');
+  });
+
+  archivedActionCancelBtn.addEventListener('click', () => {
+    archivedActionOverlay.classList.remove('open');
+    secondaryNoteCtx = null;
+  });
+
+  archivedActionOverlay.addEventListener('click', (e) => {
+    if (e.target === archivedActionOverlay) {
+      archivedActionOverlay.classList.remove('open');
+      secondaryNoteCtx = null;
+    }
+  });
+
+  permanentDeleteCancelBtn.addEventListener('click', () => {
+    permanentDeleteOverlay.classList.remove('open');
+    secondaryNoteCtx = null;
+  });
+
+  permanentDeleteOverlay.addEventListener('click', (e) => {
+    if (e.target === permanentDeleteOverlay) {
+      permanentDeleteOverlay.classList.remove('open');
+      secondaryNoteCtx = null;
+    }
+  });
+
+  permanentDeleteConfirmBtn.addEventListener('click', () => {
+    permanentDeleteOverlay.classList.remove('open');
+    if (secondaryNoteCtx) {
+      permanentlyDeleteNoteAt(secondaryNoteCtx.dateKey, secondaryNoteCtx.id);
+      renderBinView(); // permanent delete is only reachable from the Bin
+    }
+    secondaryNoteCtx = null;
   });
 
   // ---- Tags ----
@@ -2308,12 +2673,33 @@
   // Intercepts the system/browser Back button. If we're in Focus Mode,
   // treat it exactly like pressing the Break button instead of closing
   // the app and silently killing the timer.
+  // Note/Journal menus and confirmation popups (long-press action menu,
+  // Delete/Permanently-Delete confirms, Archive/Bin item menu, Journal's
+  // header menu) aren't given their own history checkpoint - they sit on
+  // top of whatever view opened them. So Back must close the topmost one
+  // of these FIRST, before any of the view-level checks below run, or
+  // Back would navigate the view underneath while leaving the popup
+  // visibly stuck open on top of it.
+  const noteScopedOverlays = [
+    noteOptionsOverlay, noteDeleteOverlay, archivedActionOverlay,
+    permanentDeleteOverlay, journalMenuOverlay
+  ];
+
   window.addEventListener('popstate', () => {
     // Ignore pops we triggered ourselves (see ignoreNextPopstate above) -
     // those already had their view change handled at the moment we called
     // history.back(), so reacting again here would skip an extra level.
     if (ignoreNextPopstate) {
       ignoreNextPopstate = false;
+      return;
+    }
+    const openOverlay = noteScopedOverlays.find((el) => el.classList.contains('open'));
+    if (openOverlay) {
+      // Cancel the pop - it only closes this overlay, the view beneath stays put.
+      history.pushState({}, '');
+      openOverlay.classList.remove('open');
+      longPressNoteCtx = null;
+      secondaryNoteCtx = null;
       return;
     }
     if (timesUpOverlay.classList.contains('open')) {
@@ -2331,6 +2717,12 @@
       saveCurrentNote();
       closeNoteEditor();
       renderJournalView();
+    } else if (archiveHistoryActive && archiveView.style.display !== 'none') {
+      archiveHistoryActive = false;
+      hideArchiveView();
+    } else if (binHistoryActive && binView.style.display !== 'none') {
+      binHistoryActive = false;
+      hideBinView();
     } else if (journalHistoryActive && journalView.style.display !== 'none') {
       journalHistoryActive = false;
       hideJournalView();
@@ -3531,7 +3923,7 @@
 
       // Small dot for dates with at least one journal note - only shown
       // while browsing the calendar from the Journal page
-      if (calendarPurpose === 'pickForJournal' && journalByDate[key] && journalByDate[key].length > 0) {
+      if (calendarPurpose === 'pickForJournal' && dateHasVisibleNote(key)) {
         const dot = document.createElement('span');
         dot.className = 'calendar-day-dot';
         btn.appendChild(dot);
@@ -3639,6 +4031,8 @@
     if (event.persisted) {
       journalView.style.display = 'none';
       noteEditView.style.display = 'none';
+      archiveView.style.display = 'none';
+      binView.style.display = 'none';
       addNoteFab.style.display = 'none';
       focusView.style.display = 'none';
       mainAppHeader.style.display = 'flex';
@@ -3646,7 +4040,12 @@
       calendarBtn.style.display = 'block';
       journalHistoryActive = false;
       noteHistoryActive = false;
+      archiveHistoryActive = false;
+      binHistoryActive = false;
       focusHistoryActive = false;
+      noteScopedOverlays.forEach((el) => el.classList.remove('open'));
+      longPressNoteCtx = null;
+      secondaryNoteCtx = null;
       render();
     }
   });
