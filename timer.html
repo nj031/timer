@@ -2325,9 +2325,10 @@
       breakOverlay.classList.add('open');
     } else if (noteHistoryActive && noteEditView.style.display !== 'none') {
       // This history entry was already consumed by the natural back
-      // navigation. Back discards (matches the in-app arrow) - it does
-      // NOT auto-save; use the Save button for that.
+      // navigation. Back now auto-saves before closing, same as the
+      // in-app back arrow.
       noteHistoryActive = false;
+      saveCurrentNote();
       closeNoteEditor();
       renderJournalView();
     } else if (journalHistoryActive && journalView.style.display !== 'none') {
