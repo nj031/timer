@@ -1233,6 +1233,23 @@
     padding: 4px 12px;
   }
 
+  /* Same pill, muted, for a setting that isn't available yet */
+  .settings-coming-soon {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background-color: var(--btn);
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  /* A not-yet-available setting is shown but deliberately not tappable */
+  .settings-option.is-coming-soon {
+    cursor: default;
+    color: var(--text-muted);
+  }
+
   /* --- Task action popup --- */
   .overlay {
     display: none;
@@ -1827,7 +1844,7 @@
       <button class="settings-card" type="button" id="settingsSwitchAccountCard">Switch Account<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="appearance">Appearance<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button" data-settings-page="timer">Timer &amp; Focus<span class="settings-card-chevron">›</span></button>
-      <button class="settings-card" type="button">Notifications<span class="settings-card-chevron">›</span></button>
+      <button class="settings-card" type="button" data-settings-page="notifications">Notifications<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Tasks<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Journal<span class="settings-card-chevron">›</span></button>
       <button class="settings-card" type="button">Data &amp; Sync<span class="settings-card-chevron">›</span></button>
@@ -1863,6 +1880,20 @@
         <button class="settings-option" type="button" id="timerSoundToggleBtn">Timer Sound<span class="settings-toggle-state" id="timerSoundState">On</span></button>
       </div>
       <div class="settings-hint">Plays a short chime when a focus timer reaches Time's Up.</div>
+    </div>
+
+    <div id="settingsPageNotifications" style="display: none;">
+      <div class="settings-option-list">
+        <!-- Scheduled task reminders don't exist in the app yet, so this is
+             shown as unavailable rather than as a switch controlling nothing. -->
+        <div class="settings-option is-coming-soon">Task Reminders<span class="settings-coming-soon">Coming Soon</span></div>
+        <button class="settings-option" type="button" id="notificationSettingsBtn">Notification Settings<span class="settings-toggle-state" id="notificationPermissionState">Allowed</span></button>
+      </div>
+      <div class="settings-hint" id="notificationHint"></div>
+      <div class="settings-hint" id="notificationManualSteps" style="display: none;">
+        Couldn't open Android's settings automatically. To change them yourself:
+        open your phone's <strong>Settings</strong> → <strong>Apps</strong> → <strong>One Task</strong> → <strong>Notifications</strong>.
+      </div>
     </div>
   </div>
 </div>
@@ -2380,6 +2411,11 @@
   const settingsSubTitle = document.getElementById('settingsSubTitle');
   const settingsPageAppearance = document.getElementById('settingsPageAppearance');
   const settingsPageTimer = document.getElementById('settingsPageTimer');
+  const settingsPageNotifications = document.getElementById('settingsPageNotifications');
+  const notificationSettingsBtn = document.getElementById('notificationSettingsBtn');
+  const notificationPermissionState = document.getElementById('notificationPermissionState');
+  const notificationHint = document.getElementById('notificationHint');
+  const notificationManualSteps = document.getElementById('notificationManualSteps');
   const settingsSwitchAccountCard = document.getElementById('settingsSwitchAccountCard');
   const switchAccountOverlay = document.getElementById('switchAccountOverlay');
   const switchAccountConfirmBtn = document.getElementById('switchAccountConfirmBtn');
@@ -4934,6 +4970,7 @@
   const settingsPages = {
     appearance: { title: 'Appearance', el: settingsPageAppearance },
     timer: { title: 'Timer & Focus', el: settingsPageTimer },
+    notifications: { title: 'Notifications', el: settingsPageNotifications },
   };
 
   function showSettingsSubView(pageKey) {
@@ -4945,6 +4982,7 @@
     settingsSubTitle.textContent = page.title;
     if (pageKey === 'appearance') renderAppearancePage();
     if (pageKey === 'timer') renderTimerSoundPage();
+    if (pageKey === 'notifications') renderNotificationsPage();
     settingsView.style.display = 'none';
     settingsSubView.style.display = 'block';
     if (!settingsSubHistoryActive) {
@@ -4996,6 +5034,65 @@
     savePrefs();
     renderTimerSoundPage();
     if (prefs.timerSound) playTimerCompletionSound(); // preview what was just turned on
+  });
+
+  // ---- Notifications ----
+  function notificationPermission() {
+    try {
+      return ('Notification' in window) ? Notification.permission : 'unsupported';
+    } catch (e) {
+      return 'unsupported';
+    }
+  }
+
+  const notificationLabels = {
+    granted: 'Allowed', denied: 'Blocked', default: 'Not set', unsupported: 'Unavailable',
+  };
+  const notificationHints = {
+    granted: 'One Task can show a notification while a focus timer is running and when it finishes. Tap to open Android’s notification settings for the app.',
+    denied: 'Notifications are blocked, so the running-timer and Time’s Up notifications won’t appear. Tap to open Android’s notification settings for the app.',
+    default: 'Tap to allow notifications while a focus timer is running and when it finishes.',
+    unsupported: 'This device or browser doesn’t support notifications.',
+  };
+
+  function renderNotificationsPage() {
+    notificationManualSteps.style.display = 'none';
+    const state = notificationPermission();
+    notificationPermissionState.textContent = notificationLabels[state];
+    notificationHint.textContent = notificationHints[state];
+    notificationSettingsBtn.disabled = state === 'unsupported';
+  }
+
+  // A web page can't open Android's settings on its own; the installed app
+  // can hand Chrome an intent that does. If nothing happens - not running as
+  // the installed app, or the intent is refused - this page stays visible,
+  // so show the manual steps rather than leaving the tap looking broken.
+  function openAndroidNotificationSettings() {
+    let leftTheApp = false;
+    const onHide = () => { if (document.visibilityState === 'hidden') leftTheApp = true; };
+    document.addEventListener('visibilitychange', onHide);
+    try {
+      window.location.href = 'intent://settings#Intent;scheme=android-app;'
+        + 'action=android.settings.APP_NOTIFICATION_SETTINGS;'
+        + 'S.android.provider.extra.APP_PACKAGE=io.github.nj031.twa;end';
+    } catch (e) { /* the fallback below covers this */ }
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if (!leftTheApp) notificationManualSteps.style.display = 'block';
+    }, 1200);
+  }
+
+  notificationSettingsBtn.addEventListener('click', () => {
+    if (notificationPermission() === 'default') {
+      // Never asked on this device - the prompt is the useful action here.
+      try {
+        const result = Notification.requestPermission();
+        if (result && typeof result.then === 'function') result.then(renderNotificationsPage).catch(() => {});
+        else setTimeout(renderNotificationsPage, 300); // older callback-style API
+      } catch (e) { /* leave the current state showing */ }
+      return;
+    }
+    openAndroidNotificationSettings();
   });
 
   // ---- Switch account ----
