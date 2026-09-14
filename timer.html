@@ -284,7 +284,8 @@
   /* --- Inputs inside Edit modal --- */
   .modal-input {
     padding: 12px;
-    border: none;
+    border: 1px solid #D5E1EE;
+    background-color: #E4EDF6;
     border-radius: 8px;
     font-size: 0.95rem;
     color: #17365D;
@@ -1445,16 +1446,6 @@
   </div>
 </div>
 
-<!-- Confirmation before moving a note to the Recycle Bin -->
-<div class="overlay" id="noteDeleteOverlay">
-  <div class="menu">
-    <div class="menu-title">Delete this note?</div>
-    <div class="menu-subtext">This action can't be undone.</div>
-    <button class="menu-btn danger" id="noteDeleteConfirmBtn">Delete</button>
-    <button class="menu-btn cancel" id="noteDeleteCancelBtn">Cancel</button>
-  </div>
-</div>
-
 <!-- Action menu for a note inside the Archive or Recycle Bin -->
 <div class="overlay" id="archivedActionOverlay">
   <div class="menu">
@@ -1783,9 +1774,6 @@
   const noteArchiveOptionBtn = document.getElementById('noteArchiveOptionBtn');
   const noteDeleteOptionBtn = document.getElementById('noteDeleteOptionBtn');
   const noteOptionsCancelBtn = document.getElementById('noteOptionsCancelBtn');
-  const noteDeleteOverlay = document.getElementById('noteDeleteOverlay');
-  const noteDeleteConfirmBtn = document.getElementById('noteDeleteConfirmBtn');
-  const noteDeleteCancelBtn = document.getElementById('noteDeleteCancelBtn');
   const archiveView = document.getElementById('archiveView');
   const archiveBackBtn = document.getElementById('archiveBackBtn');
   const archiveNotesList = document.getElementById('archiveNotesList');
@@ -2385,24 +2373,7 @@
 
   noteDeleteOptionBtn.addEventListener('click', () => {
     noteOptionsOverlay.classList.remove('open');
-    noteDeleteOverlay.classList.add('open');
-  });
-
-  noteDeleteCancelBtn.addEventListener('click', () => {
-    noteDeleteOverlay.classList.remove('open');
-    longPressNoteCtx = null;
-  });
-
-  noteDeleteOverlay.addEventListener('click', (e) => {
-    if (e.target === noteDeleteOverlay) {
-      noteDeleteOverlay.classList.remove('open');
-      longPressNoteCtx = null;
-    }
-  });
-
-  noteDeleteConfirmBtn.addEventListener('click', () => {
-    noteDeleteOverlay.classList.remove('open');
-    // Moves the note to the Recycle Bin rather than deleting it outright -
+    // Moves the note straight to the Recycle Bin, no confirmation step -
     // the calendar dot for this date disappears the same way it always
     // has, since the dot only ever counts notes with no status set.
     if (longPressNoteCtx) moveNoteToBin(longPressNoteCtx.dateKey, longPressNoteCtx.id);
@@ -2770,7 +2741,7 @@
   // navigate the view underneath while leaving the popup/drawer visibly
   // stuck open on top of it.
   const scopedOverlays = [
-    noteOptionsOverlay, noteDeleteOverlay, archivedActionOverlay,
+    noteOptionsOverlay, archivedActionOverlay,
     permanentDeleteOverlay, journalMenuOverlay, drawerOverlay
   ];
 
