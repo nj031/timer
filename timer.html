@@ -1580,7 +1580,7 @@
 <div class="app" id="appRoot" style="display:none;">
   <div class="app-header" id="mainAppHeader">
     <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">☰</button>
-    <h1>Focus Timer</h1>
+    <h1 id="mainHeaderTitle">Task List</h1>
     <button id="calendarBtn" class="calendar-btn" aria-label="Open calendar"><img src="calendar-icon.png" alt="" class="calendar-btn-icon"></button>
   </div>
 
@@ -2133,6 +2133,7 @@
   const listView = document.getElementById('listView');
   const focusView = document.getElementById('focusView');
   const mainAppHeader = document.getElementById('mainAppHeader');
+  const mainHeaderTitle = document.getElementById('mainHeaderTitle');
   const hamburgerBtn = document.getElementById('hamburgerBtn');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const drawerJournalBtn = document.getElementById('drawerJournalBtn');
@@ -3149,6 +3150,7 @@
   function showFocusView() {
     listView.style.display = 'none';
     focusView.style.display = 'block';
+    mainHeaderTitle.textContent = 'Focus Timer';
     calendarBtn.style.display = 'none'; // Calendar isn't accessible from Focus Mode
     if (!focusHistoryActive) {
       try {
@@ -3165,6 +3167,7 @@
   function showListView() {
     focusView.style.display = 'none';
     listView.style.display = 'block';
+    mainHeaderTitle.textContent = 'Task List';
     calendarBtn.style.display = 'block';
     // Consume the fake history entry now that we've left Focus Mode,
     // so Back presses on the list screen behave normally again.
