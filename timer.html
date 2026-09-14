@@ -1975,6 +1975,16 @@
   let currentUid = null;
   let cloudSyncTimer = null;
   let cloudUnsubscribe = null; // stops the live listener started by startCloudListener()
+  // True whenever we've loaded local data because the cloud read failed
+  // (offline, network blip, etc.) rather than because it's genuinely this
+  // account's real data. While true, ALL automatic cloud writes are
+  // refused - not just from the load itself, but from anything else that
+  // happens to trigger a save afterward (render() saves as a side effect,
+  // for example) - so a possibly-empty/stale local fallback (e.g. right
+  // after clearing browser storage) can never silently overwrite this
+  // account's real cloud data. Cleared once the live listener actually
+  // delivers real cloud data again.
+  let cloudSyncBlocked = false;
 
   // Every local cache key is namespaced by the signed-in account's uid, so
   // switching accounts on the same device (or a fresh sign-up) never sees
@@ -1989,6 +1999,7 @@
   // without hammering Firestore on every keystroke/tick.
   function scheduleCloudSync() {
     if (!currentUid) return;
+    if (cloudSyncBlocked) return; // see the comment on cloudSyncBlocked above
     const uid = currentUid; // captured now, not read again when the timer fires below -
                              // otherwise a fast logout/account-switch inside this window
                              // would write the previous account's in-memory data into
@@ -2052,6 +2063,7 @@
       if (snap.metadata.hasPendingWrites) return;
       if (cloudSyncTimer) return;
 
+      cloudSyncBlocked = false; // this is confirmed real cloud data - safe to sync again from now on
       const fixedATimer = applyCloudData(snap.data());
       processPostponements();
       materializeRecurringTasksForDate(selectedDateKey);
@@ -4888,6 +4900,7 @@
       const snap = await db.collection('users').doc(uid).get();
       if (snap.exists && snap.data()) {
         applyCloudData(snap.data());
+        cloudSyncBlocked = false;
       } else {
         // First login ever for this account: bring across whatever's
         // already on this device (if anything) as a starting point.
@@ -4895,11 +4908,15 @@
         loadJournal();
         loadCustomTags();
         reconcileAllTimers();
+        cloudSyncBlocked = false; // genuinely nothing in the cloud yet - safe to sync up
       }
     } catch (e) {
       // Offline or an error talking to Firestore — fall back to whatever's
-      // cached locally on this device so the app still works.
+      // cached locally on this device so the app still works, but block
+      // all automatic cloud writes until the live listener started below
+      // actually confirms real cloud data (see cloudSyncBlocked above).
       console.error('Could not load cloud data, using local cache:', e);
+      cloudSyncBlocked = true;
       loadTasks();
       loadJournal();
       loadCustomTags();
@@ -4922,11 +4939,14 @@
 
     // Push current state up right away (harmless if already in sync, and
     // is what actually creates the cloud document on a first-ever login,
-    // and also persists anything reconcileAllTimers() just fixed up).
+    // and also persists anything reconcileAllTimers() just fixed up) -
+    // this is a no-op if cloudSyncBlocked is true (see above).
     scheduleCloudSync();
 
     // Now that the initial load has finished, start listening for live
-    // updates from this same account signed in on another device/tab.
+    // updates from this same account signed in on another device/tab -
+    // this also self-heals the screen once back online after an offline
+    // load above, since the listener will deliver the real cloud data.
     startCloudListener(uid);
   }
 
@@ -4942,6 +4962,7 @@
       clearTimeout(cloudSyncTimer); // don't let a pending write from the account that just
                                      // logged out land in whichever account signs in next
       cloudSyncTimer = null;
+      cloudSyncBlocked = false; // reset for whichever account logs in next
       stopCloudListener(); // don't keep receiving the old account's live updates
       showLoginScreen();
     }
