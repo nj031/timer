@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Task at a Time</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F5F4F0">
+<meta name="theme-color" content="#F4F8FC">
 <link rel="apple-touch-icon" href="icon-192.png">
 <!-- Firebase (Authentication + Firestore) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -16,9 +16,9 @@
 
   body {
     min-height: 100vh;
-    background-color: #F5F4F0;
+    background-color: #F4F8FC;
     font-family: system-ui, -apple-system, sans-serif;
-    color: #1B2A32;
+    color: #17365D;
     display: flex;
     justify-content: center;
     padding: 24px 16px 60px;
@@ -32,7 +32,7 @@
   h1 {
     font-size: 1.3rem;
     font-weight: 600;
-    color: #2F7D68;
+    color: #2F6FD6;
     text-align: center;
     margin-bottom: 20px;
   }
@@ -44,12 +44,12 @@
     padding: 20px;
     text-align: center;
     margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
+    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
   }
 
   #activeName {
     font-size: 1rem;
-    color: #5B6B70;
+    color: #6B7C93;
     margin-bottom: 8px;
     min-height: 1.2em;
   }
@@ -59,7 +59,7 @@
     font-size: 0.78rem;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #2F7D68;
+    color: #2F6FD6;
     text-align: center;
     margin-bottom: 6px;
   }
@@ -67,7 +67,7 @@
   #focusName {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1B2A32;
+    color: #17365D;
     text-align: center;
     margin-bottom: 22px;
   }
@@ -87,19 +87,19 @@
 
   .ring-track {
     fill: none;
-    stroke: #D8D9D2;
+    stroke: #D5E1EE;
     stroke-width: 10;
   }
 
   .ring-progress {
     fill: none;
-    stroke: #2F7D68;
+    stroke: #2F6FD6;
     stroke-width: 10;
     stroke-linecap: round;
   }
 
   .ring-dot {
-    fill: #2F7D68;
+    fill: #2F6FD6;
   }
 
   .ring-center {
@@ -120,7 +120,7 @@
 
   .ring-total {
     font-size: 0.8rem;
-    color: #5B6B70;
+    color: #6B7C93;
     margin-top: 4px;
   }
 
@@ -149,34 +149,34 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 2px solid #2F7D68;
+    border: 2px solid #2F6FD6;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
-    color: #1B2A32;
+    color: #17365D;
   }
 
   .focus-subtask-item.completed .focus-subtask-checkbox {
-    background-color: #9FD8CB;
+    background-color: #DCEBFA;
   }
 
   .focus-subtask-item.completed .focus-subtask-name {
     text-decoration: line-through;
-    color: #5B6B70;
+    color: #6B7C93;
   }
 
   .focus-subtask-name {
     font-size: 1.05rem;
-    color: #1B2A32;
+    color: #17365D;
   }
 
   /* --- Subtasks (Task List - read-only preview) --- */
   .subtasks-toggle-btn {
     background: none;
     border: none;
-    color: #2F7D68;
+    color: #2F6FD6;
     font-size: 0.78rem;
     padding: 0;
     cursor: pointer;
@@ -196,14 +196,14 @@
     align-items: center;
     gap: 8px;
     font-size: 0.82rem;
-    color: #5B6B70;
+    color: #6B7C93;
   }
 
   .task-subtasks-preview .preview-checkbox {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 1.5px solid #8A9A9E;
+    border: 1.5px solid #9BADC4;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -212,8 +212,8 @@
   }
 
   .task-subtasks-preview li.completed .preview-checkbox {
-    background-color: #8A9A9E;
-    color: #22343C;
+    background-color: #9BADC4;
+    color: #17365D;
   }
 
   .task-subtasks-preview li.completed .subtask-preview-name {
@@ -224,7 +224,7 @@
   .task-section-header {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #2F7D68;
+    color: #2F6FD6;
     margin: 14px 0 8px;
   }
 
@@ -243,8 +243,8 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.85rem;
     cursor: pointer;
     margin-bottom: 4px;
@@ -264,7 +264,7 @@
   .subtask-remove-btn {
     background: none;
     border: none;
-    color: #C78A3A;
+    color: #6B7C93;
     font-size: 1.1rem;
     line-height: 1;
     padding: 4px 8px;
@@ -275,7 +275,7 @@
   /* --- Break confirmation modal subtext --- */
   .menu-subtext {
     font-size: 0.85rem;
-    color: #5B6B70;
+    color: #6B7C93;
     text-align: center;
     margin-top: -4px;
     margin-bottom: 6px;
@@ -287,7 +287,7 @@
     border: none;
     border-radius: 8px;
     font-size: 0.95rem;
-    color: #1B2A32;
+    color: #17365D;
     width: 100%;
   }
 
@@ -315,7 +315,7 @@
     cursor: pointer;
   }
 
-  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #ECEDE7; color: #1B2A32; }
+  #focusPauseBtn, #focusResetBtn, #focusBreakBtn { background-color: #E4EDF6; color: #17365D; }
 
   .controls button:disabled {
     opacity: 0.4;
@@ -330,8 +330,8 @@
     margin-bottom: 20px;
     border: none;
     border-radius: 10px;
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
@@ -340,7 +340,7 @@
   /* --- Add Task modal --- */
   .modal-label {
     font-size: 0.8rem;
-    color: #5B6B70;
+    color: #6B7C93;
     text-align: left;
     margin-bottom: -6px;
   }
@@ -356,15 +356,15 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.85rem;
     cursor: pointer;
   }
 
   .quick-duration-btn.selected, .edit-quick-duration-btn.selected, .timer-picker-btn.selected, .edit-timer-picker-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -375,8 +375,8 @@
     padding: 10px 0;
     border: none;
     border-radius: 8px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.9rem;
     cursor: pointer;
   }
@@ -391,8 +391,8 @@
     padding: 10px 0;
     border: none;
     border-radius: 8px;
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
@@ -403,7 +403,7 @@
     border: none;
     border-radius: 8px;
     background: none;
-    color: #C78A3A;
+    color: #6B7C93;
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -429,21 +429,21 @@
     padding: 8px 0;
     border: none;
     border-radius: 8px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.85rem;
     cursor: pointer;
   }
 
   .date-option-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
   .chosen-date-preview {
     font-size: 0.8rem;
-    color: #5B6B70;
+    color: #6B7C93;
     text-align: center;
     margin-top: -4px;
   }
@@ -460,15 +460,15 @@
     padding: 8px 4px;
     border: none;
     border-radius: 8px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .repeat-type-btn.selected, .edit-repeat-type-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -490,14 +490,14 @@
     border: none;
     border-radius: 8px;
     background-color: #FFFFFF;
-    color: #1B2A32;
+    color: #17365D;
     font-size: 0.78rem;
     cursor: pointer;
   }
 
   .repeat-custom-mode-btn.selected, .edit-repeat-custom-mode-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -513,14 +513,14 @@
     border-radius: 50%;
     border: none;
     background-color: #FFFFFF;
-    color: #1B2A32;
+    color: #17365D;
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .repeat-weekday-btn.selected, .edit-repeat-weekday-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -535,15 +535,15 @@
     padding: 6px 12px;
     border: none;
     border-radius: 20px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     font-size: 0.8rem;
     cursor: pointer;
   }
 
   .tag-btn.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -581,7 +581,7 @@
   .toggle-track {
     position: absolute;
     inset: 0;
-    background-color: #ECEDE7;
+    background-color: #E4EDF6;
     border-radius: 24px;
     cursor: pointer;
     transition: background-color 0.15s;
@@ -594,18 +594,18 @@
     height: 18px;
     left: 3px;
     top: 3px;
-    background-color: #F2EFE9;
+    background-color: #FFFFFF;
     border-radius: 50%;
     transition: transform 0.15s;
   }
 
   .toggle-switch input:checked + .toggle-track {
-    background-color: #9FD8CB;
+    background-color: #DCEBFA;
   }
 
   .toggle-switch input:checked + .toggle-track::before {
     transform: translateX(20px);
-    background-color: #1B2A32;
+    background-color: #17365D;
   }
 
   /* --- Task list --- */
@@ -622,7 +622,7 @@
     padding: 14px;
     cursor: pointer;
     border: 2px solid transparent;
-    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
+    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -636,7 +636,7 @@
   .drag-handle {
     font-size: 1.3rem;
     line-height: 1;
-    color: #8A9A9E;
+    color: #9BADC4;
     padding: 10px 8px;
     margin: -10px -8px;
     cursor: grab;
@@ -655,7 +655,7 @@
   }
 
   .task.active {
-    border-color: #2F7D68;
+    border-color: #2F6FD6;
   }
 
   .task.completed {
@@ -678,8 +678,8 @@
     font-size: 0.7rem;
     padding: 2px 9px;
     border-radius: 20px;
-    border: 1px solid #2F7D68;
-    color: #2F7D68;
+    border: 1px solid #2F6FD6;
+    color: #2F6FD6;
     background: none;
     white-space: nowrap;
   }
@@ -695,18 +695,18 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 2px solid #2F7D68;
+    border: 2px solid #2F6FD6;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    color: #1B2A32;
+    color: #17365D;
     cursor: pointer;
   }
 
   .task.completed .main-task-checkbox {
-    background-color: #9FD8CB;
+    background-color: #DCEBFA;
   }
 
   .task-subtasks-preview li.clickable {
@@ -715,7 +715,7 @@
 
   .task-duration {
     font-size: 0.85rem;
-    color: #5B6B70;
+    color: #6B7C93;
   }
 
   .task-bottom {
@@ -728,11 +728,11 @@
     font-size: 0.75rem;
     padding: 3px 8px;
     border-radius: 20px;
-    background-color: #ECEDE7;
+    background-color: #E4EDF6;
   }
 
-  .status.in-progress { background-color: #C78A3A; color: #1B2A32; }
-  .status.completed { background-color: #6FBF8B; color: #1B2A32; }
+  .status.in-progress { background-color: #DCEBFA; color: #2F6FD6; }
+  .status.completed { background-color: #2F6FD6; color: #FFFFFF; }
 
   .task-actions {
     display: flex;
@@ -742,7 +742,7 @@
   .task-actions button {
     border: none;
     background: none;
-    color: #5B6B70;
+    color: #6B7C93;
     font-size: 0.85rem;
     cursor: pointer;
     padding: 4px 6px;
@@ -774,7 +774,7 @@
   }
 
   .note-menu-btn {
-    color: #2F7D68;
+    color: #2F6FD6;
     font-size: 2rem;
     font-weight: 800;
   }
@@ -789,7 +789,7 @@
     right: auto;
     font-size: 1.8rem;
     font-weight: 800;
-    color: #2F7D68;
+    color: #2F6FD6;
     padding: 10px 14px;
   }
 
@@ -809,7 +809,7 @@
     text-align: center;
     font-size: 1rem;
     font-weight: 600;
-    color: #1B2A32;
+    color: #17365D;
     margin-bottom: 18px;
   }
 
@@ -825,7 +825,7 @@
     border-radius: 16px;
     padding: 14px;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
+    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
     /* Long-press opens an action menu - this stops the OS text-selection
        bubble from popping up mid-press and hijacking the gesture. */
     user-select: none;
@@ -835,7 +835,7 @@
   .journal-note-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #1B2A32;
+    color: #17365D;
     margin-bottom: 4px;
   }
 
@@ -849,7 +849,7 @@
     flex: 1;
     min-width: 0;
     font-size: 0.85rem;
-    color: #5B6B70;
+    color: #6B7C93;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -858,7 +858,7 @@
   .journal-note-time {
     flex-shrink: 0;
     font-size: 0.72rem;
-    color: #8A9A9E;
+    color: #9BADC4;
   }
 
   .fab-btn {
@@ -869,8 +869,8 @@
     height: 64px;
     border-radius: 50%;
     border: none;
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-size: 1.9rem;
     font-weight: 600;
     line-height: 1;
@@ -894,11 +894,11 @@
     font-family: inherit;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1B2A32;
+    color: #17365D;
   }
 
   .note-title-input::placeholder {
-    color: #8A9A9E;
+    color: #9BADC4;
   }
 
   .note-content-input {
@@ -914,7 +914,7 @@
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.6;
-    color: #1B2A32;
+    color: #17365D;
     /* Some mobile WebViews still draw their native multiline-text-field
        chrome (an inset edge + scrollbar track) even with border:none -
        this strips that so the writing area has no visible edge. */
@@ -929,7 +929,7 @@
   }
 
   .note-content-input::placeholder {
-    color: #8A9A9E;
+    color: #9BADC4;
   }
 
   /* Small dot on calendar days that already have at least one journal note */
@@ -945,7 +945,7 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: #9FD8CB;
+    background-color: #DCEBFA;
   }
 
   /* --- Date navigation bar --- */
@@ -960,7 +960,7 @@
   .date-nav-btn {
     background: none;
     border: none;
-    color: #2F7D68;
+    color: #2F6FD6;
     font-size: 1.4rem;
     line-height: 1;
     padding: 4px 10px;
@@ -975,17 +975,17 @@
   #dateLabelMain {
     font-size: 1rem;
     font-weight: 600;
-    color: #1B2A32;
+    color: #17365D;
   }
 
   .date-label-sub {
     font-size: 0.78rem;
-    color: #5B6B70;
+    color: #6B7C93;
   }
 
   .today-btn {
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     border: none;
     border-radius: 8px;
     padding: 5px 10px;
@@ -996,7 +996,7 @@
   .progress-label {
     text-align: center;
     font-size: 0.85rem;
-    color: #2F7D68;
+    color: #2F6FD6;
     margin-bottom: 16px;
   }
 
@@ -1020,7 +1020,7 @@
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
     font-size: 0.75rem;
-    color: #5B6B70;
+    color: #6B7C93;
     margin-top: 4px;
   }
 
@@ -1033,7 +1033,7 @@
   .calendar-day {
     background: none;
     border: none;
-    color: #1B2A32;
+    color: #17365D;
     padding: 8px 0;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -1041,16 +1041,16 @@
   }
 
   .calendar-day:hover {
-    background-color: #ECEDE7;
+    background-color: #E4EDF6;
   }
 
   .calendar-day.today {
-    border: 1px solid #2F7D68;
+    border: 1px solid #2F6FD6;
   }
 
   .calendar-day.selected {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
   }
 
@@ -1063,7 +1063,7 @@
   }
 
   .calendar-day.disabled-day {
-    color: #C6C8C1;
+    color: #B9C6D6;
     cursor: not-allowed;
     opacity: 0.5;
   }
@@ -1074,7 +1074,7 @@
 
   .empty-msg {
     text-align: center;
-    color: #5B6B70;
+    color: #6B7C93;
     font-size: 0.9rem;
     padding: 20px 0;
   }
@@ -1117,7 +1117,7 @@
     width: 78%;
     max-width: 300px;
     background-color: #FFFFFF;
-    box-shadow: 2px 0 12px rgba(27, 42, 50, 0.12);
+    box-shadow: 2px 0 12px rgba(23, 54, 93, 0.12);
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     padding: 28px 16px;
@@ -1133,19 +1133,19 @@
     display: block;
     width: 100%;
     text-align: left;
-    background-color: #ECEDE7;
+    background-color: #E4EDF6;
     border: none;
     border-radius: 12px;
     padding: 16px 18px;
     margin-bottom: 10px;
     font-size: 1rem;
     font-weight: 600;
-    color: #1B2A32;
+    color: #17365D;
     cursor: pointer;
   }
 
   .drawer-item:active {
-    background-color: #D8D9D2;
+    background-color: #D5E1EE;
   }
 
   .drawer-item-logout {
@@ -1168,7 +1168,7 @@
     font-size: 1.05rem;
     font-weight: 600;
     text-align: center;
-    color: #2F7D68;
+    color: #2F6FD6;
     margin-bottom: 6px;
     word-break: break-word;
   }
@@ -1179,19 +1179,19 @@
     font-weight: 600;
     border: none;
     border-radius: 10px;
-    background-color: #ECEDE7;
-    color: #1B2A32;
+    background-color: #E4EDF6;
+    color: #17365D;
     cursor: pointer;
   }
 
   .menu-btn.danger {
     background-color: #C75A4A;
-    color: #F2EFE9;
+    color: #FFFFFF;
   }
 
   .menu-btn.cancel {
     background-color: transparent;
-    color: #5B6B70;
+    color: #6B7C93;
   }
 
   /* Positioned in the Note Editor's header (see .calendar-btn for the
@@ -1200,8 +1200,8 @@
   .note-save-btn {
     padding: 8px 18px;
     border-radius: 8px;
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
     font-weight: 600;
     font-size: 0.85rem;
     text-align: center;
@@ -1211,7 +1211,7 @@
   #loginScreen {
     position: fixed;
     inset: 0;
-    background-color: #F5F4F0;
+    background-color: #F4F8FC;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1225,19 +1225,19 @@
     background-color: #FFFFFF;
     border-radius: 16px;
     padding: 28px 24px;
-    box-shadow: 0 1px 4px rgba(27, 42, 50, 0.08);
+    box-shadow: 0 1px 4px rgba(23, 54, 93, 0.08);
   }
 
   .login-box h1 {
     font-size: 1.4rem;
-    color: #2F7D68;
+    color: #2F6FD6;
     text-align: center;
     margin-bottom: 4px;
   }
 
   .login-box .login-sub {
     font-size: 0.85rem;
-    color: #5B6B70;
+    color: #6B7C93;
     text-align: center;
     margin-bottom: 22px;
   }
@@ -1247,13 +1247,13 @@
     padding: 12px 14px;
     margin-bottom: 12px;
     border-radius: 10px;
-    border: 1px solid #D8D9D2;
+    border: 1px solid #D5E1EE;
     background-color: #FFFFFF;
-    color: #1B2A32;
+    color: #17365D;
     font-size: 0.95rem;
   }
 
-  .login-input::placeholder { color: #6E848C; }
+  .login-input::placeholder { color: #9BADC4; }
 
   .login-btn {
     width: 100%;
@@ -1267,24 +1267,24 @@
   }
 
   .login-btn-primary {
-    background-color: #9FD8CB;
-    color: #1B2A32;
+    background-color: #DCEBFA;
+    color: #17365D;
   }
 
   .login-btn-secondary {
     background-color: transparent;
-    color: #2F7D68;
-    border: 1px solid #D8D9D2;
+    color: #2F6FD6;
+    border: 1px solid #D5E1EE;
   }
 
   .login-btn-google {
-    background-color: #F2EFE9;
-    color: #1B2A32;
+    background-color: #FFFFFF;
+    color: #17365D;
   }
 
   .login-divider {
     text-align: center;
-    color: #6E848C;
+    color: #9BADC4;
     font-size: 0.8rem;
     margin: 14px 0;
   }
@@ -1299,7 +1299,7 @@
 
   #loginLoading {
     text-align: center;
-    color: #2F7D68;
+    color: #2F6FD6;
     font-size: 0.85rem;
     margin-top: 10px;
     display: none;
