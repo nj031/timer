@@ -1282,6 +1282,93 @@
   .settings-group { margin-top: 22px; }
   .settings-group:first-child { margin-top: 0; }
 
+  /* --- Pro screen ---
+     Presentation only for now: the upgrade button and the two links below it
+     are plain elements, not controls, so nothing here can be activated. */
+  .pro-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: -8px 0 22px;
+  }
+
+  .pro-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pro-feature {
+    background-color: var(--surface);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px var(--shadow-color);
+  }
+
+  .pro-feature-name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .pro-feature-desc {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+  }
+
+  .pro-purchase {
+    margin-top: 24px;
+    background-color: var(--accent-soft);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .pro-plan-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .pro-plan-term {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .pro-price {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 10px 0 16px;
+  }
+
+  .pro-upgrade-btn {
+    background-color: var(--accent);
+    color: var(--surface);
+    border-radius: 12px;
+    padding: 14px 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .pro-legal {
+    font-size: 0.76rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin-top: 14px;
+    text-align: left;
+  }
+
+  .pro-links {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 14px;
+  }
+
   /* --- Task action popup --- */
   .overlay {
     display: none;
@@ -1904,11 +1991,52 @@
 
     <!-- Placeholder only. Pro itself isn't built yet, so this says so rather
          than showing plans or a purchase flow that doesn't exist. -->
+    <!-- Presentation only. Nothing on this screen is wired up: the upgrade
+         button and the two links are plain elements rather than controls, so
+         there is no purchase, no Pro activation, and nothing to tap. -->
     <div id="settingsPagePro" style="display: none;">
-      <div class="settings-option-list">
-        <div class="settings-option is-coming-soon">One Task Pro<span class="settings-coming-soon">Coming Soon</span></div>
+      <div class="pro-subtitle">Focus better. Keep everything in sync.</div>
+
+      <div class="settings-section-title">Pro includes</div>
+      <div class="pro-feature-list">
+        <div class="pro-feature">
+          <div class="pro-feature-name">Cloud Sync</div>
+          <div class="pro-feature-desc">Keep your tasks, journal, tags, and progress synced securely to your One Task account.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">Multiple Devices</div>
+          <div class="pro-feature-desc">Use One Task across your phone, tablet, and other supported devices.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">Automatic Cloud Backup</div>
+          <div class="pro-feature-desc">Automatically back up your One Task data to the cloud, so you don't have to manage backups manually.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">Extended History</div>
+          <div class="pro-feature-desc">Keep your task and focus history for longer and look back at your progress over time.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">More Themes</div>
+          <div class="pro-feature-desc">Choose from additional themes to personalize your One Task experience.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">More Fonts</div>
+          <div class="pro-feature-desc">Choose from additional fonts to make One Task feel more personal.</div>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature-name">Task Reminders</div>
+          <div class="pro-feature-desc">Set reminders for your tasks and receive notifications at the time you choose.</div>
+        </div>
       </div>
-      <div class="settings-hint">Pro isn't available yet. When it is, you'll be able to upgrade from here.</div>
+
+      <div class="pro-purchase">
+        <div class="pro-plan-name">One Task Pro</div>
+        <div class="pro-plan-term">Lifetime access</div>
+        <div class="pro-price">₹XXX</div>
+        <div class="pro-upgrade-btn">Upgrade to Pro</div>
+        <div class="pro-legal">One-time purchase. No subscription or recurring charges. Payment is processed securely through Google Play. By purchasing One Task Pro, you agree to our Terms of Service and Privacy Policy. Pro access is linked to your One Task account and can be restored on supported devices. Refunds are subject to Google Play's applicable refund policies.</div>
+        <div class="pro-links">Terms of Service · Privacy Policy</div>
+      </div>
     </div>
 
     <div class="settings-option-list" id="settingsPageAppearance" style="display: none;">
@@ -5077,7 +5205,7 @@
   // following the same show/hide + history pattern as the other sub-screens.
   let settingsSubHistoryActive = false;
   const settingsPages = {
-    pro: { title: 'Upgrade to Pro', el: settingsPagePro },
+    pro: { title: 'One Task Pro', el: settingsPagePro },
     appearance: { title: 'Appearance', el: settingsPageAppearance },
     timer: { title: 'Timer & Focus', el: settingsPageTimer },
     notifications: { title: 'Notifications', el: settingsPageNotifications },
